@@ -1,375 +1,205 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#FF4A24"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Chama"></head><body>
-<title>Chama — POV AR (segurança) + Cotas de robô</title>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="theme-color" content="#FF4A24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chama">
+<title>Chama · Segurança</title>
+<link rel="stylesheet" href="../app.css">
 <style>
-  :root{
-    --ink:#0E1116; --ink-2:#565E6C; --ink-3:#8A93A2;
-    --line:#E7EAF0; --line-2:#F0F2F6; --canvas:#F3F5F8; --surface:#FFFFFF;
-    --flame:#FF4A24; --flame-600:#E63A17; --flame-tint:#FFEBE4; --ember:#FF8A3D;
-    --ok:#0F9D58; --ok-tint:#E7F6EE; --ok-600:#0b7a44;
-    --alert:#E5341C; --alert-tint:#FDE7E3;
-    --r-lg:20px; --r-md:14px; --shadow:0 1px 2px rgba(14,17,22,.04),0 8px 24px rgba(14,17,22,.06);
-    --shadow-soft:0 1px 2px rgba(14,17,22,.05);
-    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:var(--sans);color:var(--ink);background:
-      radial-gradient(1200px 600px at 15% -10%,#FFF3EE 0%,rgba(255,243,238,0) 55%),
-      radial-gradient(900px 500px at 110% 0%,#EEF2FF 0%,rgba(238,242,255,0) 50%),var(--canvas);
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
-  .masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--ember),var(--flame) 60%,var(--flame-600));display:grid;place-items:center;box-shadow:0 6px 16px rgba(255,74,36,.35)}
-  .mark svg{width:20px;height:20px;color:#fff}
-  .wordmark{font-weight:800;font-size:22px;letter-spacing:-.03em}.wordmark b{color:var(--flame)}
-  .masthead .sub{color:var(--ink-2);font-size:13px;margin-top:2px}
-  .pill-note{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);padding:8px 14px;border-radius:999px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow-soft)}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-  .stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:36px;align-items:start}
-  @media(max-width:900px){.stage{grid-template-columns:1fr;gap:28px}}
-  .stage-left{display:flex;flex-direction:column;align-items:center;gap:16px}
-  .screen-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .tab{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:999px;cursor:pointer;transition:.18s}
-  .tab:hover{color:var(--ink);border-color:#D8DCE4}.tab.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .tab:focus-visible{outline:2px solid var(--flame);outline-offset:2px}
-  .device{width:390px;max-width:100%;height:812px;background:var(--surface);border-radius:46px;padding:12px;box-shadow:0 2px 6px rgba(14,17,22,.10),0 40px 80px -30px rgba(14,17,22,.45);border:1px solid #E4E7EE;position:relative}
-  .device::before{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#0E1116;border-radius:0 0 16px 16px;z-index:6}
-  .viewport{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;background:var(--canvas)}
-  .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--canvas)}
-  .screen.active{display:flex}
-  @media(prefers-reduced-motion:no-preference){.screen.active{animation:fade .28s ease}@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
-  .statusbar{height:52px;flex:0 0 52px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 8px;font-size:13px;font-weight:600}
-  .statusbar.dark2{color:#fff}
-  .statusbar .sig svg{width:16px;height:16px}
-  .body{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 18px 22px;scrollbar-width:none}
-  .body::-webkit-scrollbar{width:0}
-  .appbar{display:flex;align-items:center;gap:12px;padding:2px 0 10px}
-  .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
-  .iconbtn svg{width:19px;height:19px}
-  .appbar .ttl{font-weight:800;letter-spacing:-.02em;font-size:16px;flex:1}
-  .appbar .ttl small{display:block;color:var(--ink-3);font-weight:600;font-size:12px}
-  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
-  .h1{font-size:23px;font-weight:800;letter-spacing:-.025em;line-height:1.14;text-wrap:balance;margin:2px 0 0}
-  .muted{color:var(--ink-2)} .row{display:flex;align-items:center;gap:10px}
-  .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-soft)}
-  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--line-2);color:var(--ink-2)}
-  .chip svg{width:14px;height:14px}.chip.ok{background:var(--ok-tint);color:var(--ok-600)}
-  .chip.flame{background:var(--flame-tint);color:var(--flame-600)}.chip.ghostwhite{background:rgba(255,255,255,.16);color:#fff}
-  .btn{font-family:inherit;font-weight:700;border-radius:var(--r-md);border:1px solid transparent;cursor:pointer;font-size:14.5px;height:52px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:.16s;width:100%}
-  .btn:focus-visible{outline:2px solid var(--flame);outline-offset:2px}
-  .btn-primary{background:var(--flame);color:#fff;box-shadow:0 8px 18px -6px rgba(255,74,36,.55)}
-  .btn-primary:hover{background:var(--flame-600)}
-  .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
-  .btn-dark{background:var(--ink);color:#fff}
-  .btn-sm{height:42px;font-size:13.5px;border-radius:12px}
-  .section-label{margin:20px 2px 10px}
-  /* toggle */
-  .sw{width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;flex:0 0 46px;transition:.18s}
+  .sw{width:46px;height:28px;border-radius:999px;background:#cfd6e0;position:relative;flex:0 0 46px;transition:.18s;cursor:pointer}
   .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
   .sw.on{background:var(--ok)}.sw.on::after{left:21px}
-  .sw.locked{background:var(--line-2)}
-  .consent{display:flex;gap:13px}
+  .consent{display:flex;gap:13px;align-items:flex-start}
   .consent .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:0 0 44px}
-  .consent .ic.safe{background:var(--ok-tint);color:var(--ok-600)}.consent .ic.ai{background:#EEF2FF;color:#3355D6}
+  .consent .ic.safe{background:var(--oktint);color:var(--ok600)}.consent .ic.ai{background:#EEF2FF;color:#3355D6}
   .consent .ic svg{width:22px;height:22px}
-  .li{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);padding:4px 0}
+  .li{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);padding:4px 0}
   .li svg{width:15px;height:15px;color:var(--ok);flex:0 0 15px;margin-top:2px}
-  .lawnote{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:14px}
-  /* live camera */
-  .camera{flex:1;position:relative;background:radial-gradient(120% 120% at 40% 25%,#2b3340,#0c0f14);display:flex;flex-direction:column}
-  .cam-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+  .lawnote{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:14px}
+  .cam{flex:1;position:relative;background:radial-gradient(120% 120% at 40% 25%,#2b3340,#0c0f14);display:flex;flex-direction:column}
+  .cam .top{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 16px 0}
   .rec{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);color:#fff;font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px}
-  .rec .rd{width:9px;height:9px;border-radius:50%;background:#FF3B30;box-shadow:0 0 0 0 rgba(255,59,48,.6)}
-  @media(prefers-reduced-motion:no-preference){.rec .rd{animation:pulse 1.4s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,48,.6)}100%{box-shadow:0 0 0 9px rgba(255,59,48,0)}}}
-  .cam-frame{flex:1;display:grid;place-items:center;color:rgba(255,255,255,.5)}
-  .cam-frame svg{width:64px;height:64px}
-  .cam-meta{position:absolute;left:16px;bottom:118px;color:#fff}
-  .cam-meta .who{font-weight:800;letter-spacing:-.01em}
-  .cam-meta .sub{font-size:12px;color:#C7CDD8}
-  .cam-ctrls{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(12,15,20,0),rgba(12,15,20,.85))}
-  .cam-ctrls .rowb{display:flex;gap:10px}
-  .cbtn{flex:1;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
-  .cbtn svg{width:18px;height:18px}
-  .sos{height:56px;border-radius:16px;border:0;background:var(--alert);color:#fff;font-family:inherit;font-weight:800;font-size:16px;letter-spacing:.02em;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 10px 24px -8px rgba(229,52,28,.7)}
-  .sos svg{width:20px;height:20px}
-  .zone{position:absolute;left:16px;right:16px;top:64px;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:center}
-  .zone svg{width:16px;height:16px;flex:0 0 16px}
-  /* sos screen */
-  .soswrap{flex:1;background:linear-gradient(180deg,#7a140a,#4a0d06);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
-  .soswrap .halo{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;margin-bottom:18px}
-  .soswrap .halo svg{width:52px;height:52px;color:#fff}
-  .soswrap h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}
-  .soswrap p{color:#F3C9C2;margin:8px 0 0;font-size:14px}
-  .sosline{width:100%;margin-top:22px;background:rgba(255,255,255,.1);border-radius:14px;padding:12px;font-size:13px;text-align:left;display:flex;gap:10px;align-items:center}
-  .sosline svg{width:18px;height:18px;flex:0 0 18px}
-  /* cotas */
-  .balance{background:linear-gradient(180deg,#15181E,#0E1116);color:#fff;border-radius:var(--r-lg);padding:18px}
-  .balance .big{font-size:32px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
-  .balance .big small{font-size:15px;font-weight:700;color:#9AA3B2}
-  .prod{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface);box-shadow:var(--shadow-soft)}
-  .prod .between b{letter-spacing:-.01em}
-  .prod .price{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-  .prod.locked{opacity:.72}
-  .tx{display:flex;align-items:center;gap:12px;padding:11px 0}.tx+.tx{border-top:1px solid var(--line-2)}
-  .tx .ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 36px}
-  .tx .ti.in{background:var(--ok-tint);color:var(--ok-600)}.tx .ti.out{background:var(--line-2);color:var(--ink-2)}
-  .tx .ti svg{width:17px;height:17px}.tx .info{flex:1}.tx .info b{font-size:13.5px}.tx .info div{font-size:11.5px;color:var(--ink-3)}
-  .amt{font-weight:800;font-variant-numeric:tabular-nums}.amt.pos{color:var(--ok-600)}
-  /* privacy dashboard */
-  .sess{display:flex;gap:12px;align-items:center;padding:12px 0}.sess+.sess{border-top:1px solid var(--line-2)}
-  .sess .si{width:38px;height:38px;border-radius:11px;background:var(--flame-tint);color:var(--flame-600);display:grid;place-items:center;flex:0 0 38px}
-  .sess .si svg{width:18px;height:18px}.sess .info{flex:1}.sess .info b{font-size:13.5px}.sess .info div{font-size:11.5px;color:var(--ink-3)}
-  .countdown{font-size:11px;font-weight:800;color:var(--ink-2);background:var(--line-2);padding:4px 8px;border-radius:999px}
-  /* right panel */
-  .panel{display:flex;flex-direction:column;gap:18px}
-  .p-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow-soft)}
-  .p-card h4{margin:0 0 4px;font-size:13px;font-weight:800}.p-card .hint{color:var(--ink-2);font-size:12.5px;margin:0 0 12px;line-height:1.45}
-  .feat{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line-2)}.feat:first-of-type{border-top:0}
-  .feat .fi{width:34px;height:34px;border-radius:10px;background:var(--flame-tint);display:grid;place-items:center;flex:0 0 34px}.feat .fi svg{width:17px;height:17px;color:var(--flame-600)}
-  .feat b{font-size:13px}.feat p{margin:2px 0 0;font-size:12px;color:var(--ink-2);line-height:1.4}
-  .legend{font-size:12.5px;color:var(--ink-2);line-height:1.55}
-  .foot{margin-top:26px;text-align:center;color:var(--ink-3);font-size:12px}
-  .kbd{font:600 11px var(--sans);background:var(--line-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  .rec .rd{width:9px;height:9px;border-radius:50%;background:#FF3B30}
+  @media (prefers-reduced-motion:no-preference){.rec .rd{animation:pulse 1.4s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,48,.6)}100%{box-shadow:0 0 0 9px rgba(255,59,48,0)}}}
+  .zone{margin:12px 16px 0;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:center}.zone svg{width:16px;height:16px;flex:0 0 16px}
+  .camframe{flex:1;display:grid;place-items:center;color:rgba(255,255,255,.5)}.camframe svg{width:64px;height:64px}
+  .cammeta{padding:0 16px;color:#fff;margin-bottom:12px}.cammeta b{font-weight:800}.cammeta div{font-size:12px;color:#C7CDD8}
+  .camctrls{padding:14px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(12,15,20,0),rgba(12,15,20,.9))}
+  .cbtn{flex:1;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.cbtn svg{width:18px;height:18px}
+  .sos{height:56px;border-radius:16px;border:0;background:#E5341C;color:#fff;font-family:inherit;font-weight:800;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 10px 24px -8px rgba(229,52,28,.7)}.sos svg{width:20px;height:20px}
+  .soswrap{flex:1;background:linear-gradient(180deg,#7a140a,#4a0d06);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px}
+  .soswrap .halo{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;margin-bottom:18px}.soswrap .halo svg{width:52px;height:52px;color:#fff}
+  .soswrap h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}.soswrap p{color:#F3C9C2;margin:8px 0 0;font-size:14px}
+  .sosline{width:100%;margin-top:14px;background:rgba(255,255,255,.1);border-radius:14px;padding:12px;font-size:13px;text-align:left;display:flex;gap:10px;align-items:center}.sosline svg{width:18px;height:18px;flex:0 0 18px}
+  .sess{display:flex;gap:12px;align-items:center;padding:12px 0}.sess+.sess{border-top:1px solid var(--line2)}
+  .sess .si{width:38px;height:38px;border-radius:11px;background:var(--tint);color:var(--flame600);display:grid;place-items:center;flex:0 0 38px}.sess .si svg{width:18px;height:18px}
+  .sess .info{flex:1}.sess .info b{font-size:13.5px}.sess .info div{font-size:11.5px;color:var(--ink3)}
+  .cd{font-size:11px;font-weight:800;color:var(--ink2);background:var(--line2);padding:4px 8px;border-radius:999px}
+  .balance{background:linear-gradient(180deg,#15181E,#0E1116);color:#fff;border-radius:20px;padding:18px}
+  .balance .big{font-size:32px;font-weight:800;letter-spacing:-.03em;margin-top:4px}.balance .big small{font-size:15px;font-weight:700;color:#9AA3B2}
+  .prod2{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface)}
+  .prod2 .row{display:flex;align-items:center;justify-content:space-between}.prod2 b{letter-spacing:-.01em}.prod2 .price{font-weight:800;font-variant-numeric:tabular-nums}
+  .prod2.locked{opacity:.72}
+  .tx{display:flex;align-items:center;gap:12px;padding:11px 0}.tx+.tx{border-top:1px solid var(--line2)}
+  .tx .ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 36px}.tx .ti svg{width:17px;height:17px}
+  .tx .ti.in{background:var(--oktint);color:var(--ok600)}.tx .ti.out{background:var(--line2);color:var(--ink2)}
+  .tx .info{flex:1}.tx .info b{font-size:13.5px}.tx .info div{font-size:11.5px;color:var(--ink3)}
+  .amt{font-weight:800;font-variant-numeric:tabular-nums}.amt.pos{color:var(--ok600)}
+  .screen.dark-screen{background:#0c0f14}
 </style>
-
+</head>
+<body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="ic-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7C7 9.9 6 11 6 13a6 6 0 1 0 12 0c0-4.5-3-7.5-6-11Z"/></symbol>
-  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
-  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
-  <symbol id="ic-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
-  <symbol id="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
-  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
-  <symbol id="ic-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="10" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 12v3M21 12v3"/></symbol>
-  <symbol id="ic-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="ic-eyeoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 6.2A9.7 9.7 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.3 3.9M6.2 6.7A17 17 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 3.6-.7"/></symbol>
-  <symbol id="ic-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></symbol>
-  <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 9v5M12 17h.01"/></symbol>
-  <symbol id="ic-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 9 6 15 15 15l1-3-4-2-2 2c-2-1-4-3-5-5l2-2-2-4z"/></symbol>
-  <symbol id="ic-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h9"/></symbol>
-  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
-  <symbol id="ic-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3 9 8m6 3-9 9m0 0-3-3m3 3 3-1c0-3 1-5 4-6l3-3-2-2-3 3c-2 3-4 4-6 4l-1 3"/></symbol>
-  <symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
-  <symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
-  <symbol id="ic-sig" viewBox="0 0 24 24"><path fill="currentColor" d="M2 16h3v4H2zM7 12h3v8H7zM12 8h3v12h-3zM17 4h3v16h-3z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7C7 9.9 6 11 6 13a6 6 0 1 0 12 0c0-4.5-3-7.5-6-11Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 6.2A9.7 9.7 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.3 3.9M6.2 6.7A17 17 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 3.6-.7"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 9 6 15 15 15l1-3-4-2-2 2c-2-1-4-3-5-5l2-2-2-4z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h9"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="10" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 12v3M21 12v3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3 9 8m6 3-9 9m0 0-3-3m3 3 3-1c0-3 1-5 4-6l3-3-2-2-3 3c-2 3-4 4-6 4l-1 3"/></symbol>
+  <symbol id="i-pix" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6 15.1 5 12 7.4 8.9 5 12 2.6ZM5 8.9 7.4 12 5 15.1 2.6 12 5 8.9Zm14 0L21.4 12 19 15.1 16.6 12 19 8.9ZM12 16.6 15.1 19 12 21.4 8.9 19 12 16.6Z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></symbol>
 </defs></svg>
 
-<div class="wrap">
-  <div class="masthead">
-    <div class="brand">
-      <div class="mark"><svg><use href="#ic-flame"/></svg></div>
-      <div>
-        <div class="wordmark">Cha<b>ma</b> · POV AR + Cotas</div>
-        <div class="sub">Segurança em tempo real, governança de dados (LGPD) e cotas de robô</div>
+<div id="app">
+
+  <!-- CONSENT -->
+  <section class="screen active" data-screen="consent">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Gravação do serviço<small>Faxina · hoje 09:00</small></div></div>
+      <h1 class="h1">Como quer usar a gravação?</h1>
+      <p class="muted" style="font-size:13px;margin-top:6px">São duas escolhas independentes. Recusar a segunda não afeta o serviço nem a primeira.</p>
+      <div class="card" style="margin-top:14px">
+        <div class="consent"><div class="ic safe"><svg><use href="#i-shield"/></svg></div>
+          <div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between"><b style="letter-spacing:-.01em">Segurança</b><span class="sw on" data-sw></span></div>
+            <div class="muted" style="font-size:12.5px;margin-top:2px">Protege você e o profissional. <b>Necessária</b>.</div></div></div>
+        <div style="margin-top:10px">
+          <div class="li"><svg><use href="#i-lock"/></svg> Vídeo <b>criptografado</b> — ninguém assiste, exceto em incidente ou SOS</div>
+          <div class="li"><svg><use href="#i-clock"/></svg> Apagado automaticamente em <b>7 dias</b></div>
+          <div class="li"><svg><use href="#i-eyeoff"/></svg> Sem reconhecimento facial · pausa em quarto/banheiro</div></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="consent"><div class="ic ai"><svg><use href="#i-ai"/></svg></div>
+          <div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between"><b style="letter-spacing:-.01em">Ajudar a treinar a IA</b><span class="sw" data-sw></span></div>
+            <div class="muted" style="font-size:12.5px;margin-top:2px"><b>Opcional</b> · pode desligar quando quiser</div></div></div>
+        <div style="margin-top:10px">
+          <div class="li"><svg><use href="#i-eyeoff"/></svg> Rostos <b>borrados</b> antes de qualquer uso</div>
+          <div class="li"><svg><use href="#i-check"/></svg> Nunca usamos imagens de crianças</div>
+          <div class="li"><svg><use href="#i-check"/></svg> Sem pagamento por imagem/biometria · você pode revogar</div></div>
+      </div>
+      <p class="lawnote">Bases legais distintas (LGPD): segurança por legítimo interesse e proteção à vida; treino de IA por consentimento específico.</p>
+      <button class="btn btn-primary" style="margin-top:14px" data-go="live">Começar serviço com segurança</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" data-go="live">Só segurança, sem treino de IA</button>
+      <a class="listrow" href="../" style="margin-top:12px"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-home"/></svg></div><div class="t"><b>Voltar ao app do cliente</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></a>
+    </div>
+  </section>
+
+  <!-- LIVE -->
+  <section class="screen dark-screen" data-screen="live">
+    <div class="cam">
+      <div class="top"><span class="rec"><span class="rd"></span> AO VIVO · 12:34</span><span class="chip gw"><svg><use href="#i-lock"/></svg> Criptografado</span></div>
+      <div class="zone"><svg><use href="#i-eyeoff"/></svg> Zonas privadas (quarto/banheiro) pausam a câmera automaticamente</div>
+      <div class="camframe"><svg><use href="#i-eye"/></svg></div>
+      <div class="cammeta"><b>POV · Marcela A.</b><div>Faxina · Rua dos Pinheiros, 480</div></div>
+      <div class="camctrls">
+        <div style="display:flex;gap:10px"><button class="cbtn" data-go="consent"><svg><use href="#i-pause"/></svg> Pausar</button><button class="cbtn" data-go="dados"><svg><use href="#i-eyeoff"/></svg> Encerrar</button></div>
+        <button class="sos" data-go="sos"><svg><use href="#i-alert"/></svg> SOS · pedir ajuda agora</button>
       </div>
     </div>
-    <div class="pill-note"><span class="dot"></span> Navegável — toque ou use os atalhos</div>
-  </div>
+  </section>
 
-  <div class="stage">
-    <div class="stage-left">
-      <div class="screen-tabs" id="tabs">
-        <button class="tab sel" data-go="consent">Consentimento (2 camadas)</button>
-        <button class="tab" data-go="live">POV ao vivo</button>
-        <button class="tab" data-go="sos">SOS</button>
-        <button class="tab" data-go="privacy">Meus dados</button>
-        <button class="tab" data-go="robot">Cotas de robô</button>
-      </div>
-
-      <div class="device"><div class="viewport">
-
-        <!-- ===== CONSENTIMENTO 2 CAMADAS ===== -->
-        <section class="screen active" data-screen="consent">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar"><button class="iconbtn" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button><div class="ttl">Gravação do serviço<small>Faxina · hoje 09:00</small></div></div>
-            <h1 class="h1">Como quer usar a gravação?</h1>
-            <p class="muted" style="font-size:13px;margin-top:6px">São duas escolhas independentes. Recusar a segunda não afeta o serviço nem a primeira.</p>
-
-            <div class="card" style="margin-top:14px">
-              <div class="consent">
-                <div class="ic safe"><svg><use href="#ic-shield"/></svg></div>
-                <div style="flex:1">
-                  <div class="between"><b style="letter-spacing:-.01em">Segurança</b><span class="sw on" aria-label="ativado"></span></div>
-                  <div class="muted" style="font-size:12.5px;margin-top:2px">Protege você e o profissional. <b>Necessária</b>.</div>
-                </div>
-              </div>
-              <div style="margin-top:10px">
-                <div class="li"><svg><use href="#ic-lock"/></svg> Vídeo <b>criptografado</b> — ninguém assiste, exceto em incidente ou SOS</div>
-                <div class="li"><svg><use href="#ic-clock"/></svg> Apagado automaticamente em <b>7 dias</b></div>
-                <div class="li"><svg><use href="#ic-eyeoff"/></svg> Sem reconhecimento facial · pausa automática em quarto/banheiro</div>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:12px">
-              <div class="consent">
-                <div class="ic ai"><svg><use href="#ic-ai"/></svg></div>
-                <div style="flex:1">
-                  <div class="between"><b style="letter-spacing:-.01em">Ajudar a treinar a IA</b><span class="sw" aria-label="desativado"></span></div>
-                  <div class="muted" style="font-size:12.5px;margin-top:2px"><b>Opcional</b> · pode desligar quando quiser</div>
-                </div>
-              </div>
-              <div style="margin-top:10px">
-                <div class="li"><svg><use href="#ic-eyeoff"/></svg> Rostos <b>borrados</b> antes de qualquer uso</div>
-                <div class="li"><svg><use href="#ic-check"/></svg> Nunca usamos imagens de crianças</div>
-                <div class="li"><svg><use href="#ic-check"/></svg> Sem pagamento por imagem/biometria · você pode revogar</div>
-              </div>
-            </div>
-
-            <p class="lawnote">Bases legais distintas (LGPD): segurança por legítimo interesse e proteção à vida; treino de IA por consentimento específico. Você controla tudo em “Meus dados”.</p>
-            <button class="btn btn-primary" style="margin-top:14px" data-go="live">Começar serviço com segurança</button>
-            <button class="btn btn-ghost btn-sm" style="margin-top:8px" data-go="live">Só segurança, sem treino de IA</button>
-          </div>
-        </section>
-
-        <!-- ===== POV AO VIVO ===== -->
-        <section class="screen" data-screen="live">
-          <div class="statusbar dark2"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="camera">
-            <div class="cam-top">
-              <span class="rec"><span class="rd"></span> AO VIVO · 12:34</span>
-              <span class="chip ghostwhite"><svg><use href="#ic-lock"/></svg> Criptografado</span>
-            </div>
-            <div class="zone"><svg><use href="#ic-eyeoff"/></svg> Zonas privadas (quarto/banheiro) pausam a câmera automaticamente</div>
-            <div class="cam-frame"><svg><use href="#ic-eye"/></svg></div>
-            <div class="cam-meta">
-              <div class="who">POV · Marcela A.</div>
-              <div class="sub">Faxina · Rua dos Pinheiros, 480</div>
-            </div>
-            <div class="cam-ctrls">
-              <div class="rowb">
-                <button class="cbtn" data-go="consent"><svg><use href="#ic-pause"/></svg> Pausar</button>
-                <button class="cbtn"><svg><use href="#ic-eyeoff"/></svg> Encerrar</button>
-              </div>
-              <button class="sos" data-go="sos"><svg><use href="#ic-alert"/></svg> SOS · pedir ajuda agora</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== SOS ===== -->
-        <section class="screen" data-screen="sos">
-          <div class="statusbar dark2"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="soswrap">
-            <div class="halo"><svg><use href="#ic-alert"/></svg></div>
-            <h2>Ajuda a caminho</h2>
-            <p>A central de segurança foi acionada e está<br>acompanhando ao vivo agora.</p>
-            <div class="sosline"><svg><use href="#ic-eye"/></svg> Transmissão liberada à central só durante o SOS</div>
-            <div class="sosline"><svg><use href="#ic-phone"/></svg> Ligando para você e para o contato de emergência</div>
-            <div class="sosline"><svg><use href="#ic-shield"/></svg> Localização e vídeo preservados como prova</div>
-            <button class="btn" style="background:#fff;color:var(--alert);margin-top:20px" data-go="live">Estou bem · cancelar</button>
-          </div>
-        </section>
-
-        <!-- ===== MEUS DADOS ===== -->
-        <section class="screen" data-screen="privacy">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar"><button class="iconbtn" data-go="live" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button><div class="ttl">Meus dados</div></div>
-
-            <div class="card">
-              <div class="between"><div><b style="letter-spacing:-.01em">Treino de IA</b><div class="muted" style="font-size:12px">Ajudar a treinar a IA com minhas gravações</div></div><span class="sw" aria-label="desativado"></span></div>
-              <div class="muted" style="font-size:11.5px;margin-top:10px">Desligado. Suas gravações são usadas só para segurança.</div>
-            </div>
-
-            <div class="section-label eyebrow">Gravações (apagam sozinhas)</div>
-            <div class="card" style="padding:4px 16px">
-              <div class="sess"><div class="si"><svg><use href="#ic-broom"/></svg></div><div class="info"><b>Faxina · hoje</b><div>Criptografada · só você e a central sob incidente</div></div><span class="countdown">apaga em 7d</span></div>
-              <div class="sess"><div class="si"><svg><use href="#ic-broom"/></svg></div><div class="info"><b>Faxina · 05/08</b><div>Sem incidentes</div></div><span class="countdown">apaga em 2d</span></div>
-            </div>
-
-            <div class="section-label eyebrow">Quem acessou</div>
-            <div class="card"><div class="muted" style="font-size:13px">Nenhum acesso registrado. Ninguém assistiu suas gravações.</div></div>
-
-            <div class="row" style="gap:9px;margin-top:16px">
-              <button class="btn btn-ghost btn-sm" style="flex:1"><svg style="width:17px;height:17px"><use href="#ic-list"/></svg> Baixar meus dados</button>
-              <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--alert)"><svg style="width:17px;height:17px"><use href="#ic-trash"/></svg> Excluir tudo</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== COTAS DE ROBÔ ===== -->
-        <section class="screen" data-screen="robot">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar"><button class="iconbtn" data-go="live" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button><div class="ttl">Cotas de robô<small>Programa de créditos de serviço</small></div></div>
-
-            <div class="balance">
-              <span class="eyebrow" style="color:#9AA3B2">Seu saldo</span>
-              <div class="big">18,0 <small>horas de serviço</small></div>
-              <div class="row" style="gap:8px;margin-top:12px">
-                <span class="chip ghostwhite"><svg><use href="#ic-robot"/></svg> 2 cotas</span>
-                <span class="chip ghostwhite"><svg><use href="#ic-clock"/></svg> rende crédito ao trabalhar</span>
-              </div>
-            </div>
-
-            <div class="section-label eyebrow">Comprar cota</div>
-            <div class="prod">
-              <div class="between"><b>Cota 10 horas</b><span class="price">R$ 499</span></div>
-              <div class="muted" style="font-size:12.5px;margin-top:3px">Crédito p/ usar em qualquer serviço. Sem resgate em dinheiro.</div>
-              <button class="btn btn-primary btn-sm" style="margin-top:12px">Comprar com PIX</button>
-            </div>
-            <div class="prod">
-              <div class="between"><b>Cota 30 horas</b><span class="price">R$ 1.390</span></div>
-              <div class="muted" style="font-size:12.5px;margin-top:3px">Melhor valor por hora. Válida por 24 meses.</div>
-              <button class="btn btn-ghost btn-sm" style="margin-top:12px">Comprar</button>
-            </div>
-            <div class="prod locked">
-              <div class="between"><b>Renda em dinheiro</b><span class="chip"><svg><use href="#ic-lock"/></svg> Em breve</span></div>
-              <div class="muted" style="font-size:12.5px;margin-top:3px">Cota que paga rendimento — disponível só quando estruturada pelo caminho regulado (CVM). </div>
-            </div>
-
-            <div class="section-label eyebrow">Extrato de créditos</div>
-            <div class="card" style="padding:4px 16px">
-              <div class="tx"><div class="ti in"><svg><use href="#ic-wallet"/></svg></div><div class="info"><b>Compra · Cota 10h</b><div>Hoje</div></div><span class="amt pos">+10,0 h</span></div>
-              <div class="tx"><div class="ti in"><svg><use href="#ic-robot"/></svg></div><div class="info"><b>Crédito gerado</b><div>Robô trabalhou p/ você</div></div><span class="amt pos">+2,0 h</span></div>
-              <div class="tx"><div class="ti out"><svg><use href="#ic-broom"/></svg></div><div class="info"><b>Usado · Faxina</b><div>05/08</div></div><span class="amt">−4,0 h</span></div>
-            </div>
-
-            <p class="lawnote">Programa de créditos de serviço — <b>não é previdência nem investimento</b>. A cota dá direito a horas de serviço, não a rendimento em dinheiro.</p>
-          </div>
-        </section>
-
-      </div></div>
+  <!-- SOS -->
+  <section class="screen dark-screen" data-screen="sos">
+    <div class="soswrap">
+      <div class="halo"><svg><use href="#i-alert"/></svg></div>
+      <h2>Ajuda a caminho</h2>
+      <p>A central de segurança foi acionada e está<br>acompanhando ao vivo agora.</p>
+      <div class="sosline"><svg><use href="#i-eye"/></svg> Transmissão liberada à central só durante o SOS</div>
+      <div class="sosline"><svg><use href="#i-phone"/></svg> Ligando para você e para o contato de emergência</div>
+      <div class="sosline"><svg><use href="#i-shield"/></svg> Localização e vídeo preservados como prova</div>
+      <button class="btn" style="background:#fff;color:#E5341C;margin-top:20px" data-go="live">Estou bem · cancelar</button>
     </div>
+  </section>
 
-    <aside class="panel">
-      <div class="p-card">
-        <h4>O que este protótipo mostra</h4>
-        <p class="hint">A camada de segurança/AR e o produto de cotas, desenhados já dentro da conformidade.</p>
-        <div class="feat"><div class="fi"><svg><use href="#ic-shield"/></svg></div><div><b>Consentimento em 2 camadas</b><p>Segurança (necessária) e treino de IA (opcional) são escolhas separadas — exigência da LGPD.</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-eye"/></svg></div><div><b>POV ao vivo + SOS</b><p>Padrão “Uber”: criptografado, acesso só sob incidente, zonas privadas pausam, botão de pânico.</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-lock"/></svg></div><div><b>Controle do titular</b><p>Ver gravações, prazo de apagamento, quem acessou, revogar IA, baixar/excluir.</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-robot"/></svg></div><div><b>Cotas = crédito de serviço</b><p>Fase 0: horas, não dinheiro. “Renda” fica travada até o caminho regulado (CVM).</p></div></div>
+  <!-- MEUS DADOS -->
+  <section class="screen" data-screen="dados">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Meus dados</div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between"><div><b style="letter-spacing:-.01em">Treino de IA</b><div class="muted" style="font-size:12px">Ajudar a treinar a IA com minhas gravações</div></div><span class="sw" data-sw></span></div>
+        <div class="muted" style="font-size:11.5px;margin-top:10px">Desligado. Suas gravações são usadas só para segurança.</div>
       </div>
-      <div class="p-card">
-        <h4>Prazos honestos</h4>
-        <p class="legend"><b>Agora:</b> streaming POV de segurança (celular no peito + WebRTC) já se paga.<br><br><b>Médio:</b> dataset diverso e rotulado vira receita (venda/licença).<br><br><b>Longo (7-10+ anos):</b> robôs autônomos — hoje os "robôs de casa" são teleoperados. Vídeo passivo não treina robô sozinho.</p>
+      <div class="sec"><span class="eyebrow">Gravações (apagam sozinhas)</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="sess"><div class="si"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Faxina · hoje</b><div>Criptografada · só sob incidente</div></div><span class="cd">apaga em 7d</span></div>
+        <div class="sess"><div class="si"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Faxina · 05/08</b><div>Sem incidentes</div></div><span class="cd">apaga em 2d</span></div>
       </div>
-      <div class="p-card">
-        <h4>Base já no código</h4>
-        <p class="legend"><code>0010_recording_consent.sql</code>: consentimento 2 camadas, sessões + trilha de acesso, dataset anonimizado removível, cotas com modelos separados e trava que impede ativar “renda” sem caminho regulado.</p>
+      <div class="sec"><span class="eyebrow">Quem acessou</span></div>
+      <div class="card"><div class="muted" style="font-size:13px">Nenhum acesso registrado. Ninguém assistiu suas gravações.</div></div>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" data-toast="Exportando seus dados…"><svg style="width:17px;height:17px"><use href="#i-list"/></svg> Baixar meus dados</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:#E5341C" data-toast="Solicitação de exclusão registrada"><svg style="width:17px;height:17px"><use href="#i-trash"/></svg> Excluir tudo</button>
       </div>
-    </aside>
-  </div>
+    </div>
+  </section>
 
-  <div class="foot">Protótipo estático para alinhar a direção · atalhos: <span class="kbd">←</span> <span class="kbd">→</span></div>
+  <!-- COTAS -->
+  <section class="screen" data-screen="cotas">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Cotas de robô<small>Programa de créditos</small></div></div>
+      <div class="balance">
+        <span class="eyebrow" style="color:#9AA3B2">Seu saldo</span><div class="big">18,0 <small>horas de serviço</small></div>
+        <div style="display:flex;gap:8px;margin-top:12px"><span class="chip gw"><svg><use href="#i-robot"/></svg> 2 cotas</span><span class="chip gw"><svg><use href="#i-clock"/></svg> rende crédito ao trabalhar</span></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Comprar cota</span></div>
+      <div class="prod2"><div class="row"><b>Cota 10 horas</b><span class="price">R$ 499</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Crédito p/ usar em qualquer serviço. Sem resgate em dinheiro.</div><button class="btn btn-primary btn-sm" style="margin-top:12px" data-toast="Cota 10h — pagamento PIX simulado"><svg style="width:17px;height:17px"><use href="#i-pix"/></svg> Comprar com PIX</button></div>
+      <div class="prod2"><div class="row"><b>Cota 30 horas</b><span class="price">R$ 1.390</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Melhor valor por hora. Válida por 24 meses.</div><button class="btn btn-ghost btn-sm" style="margin-top:12px" data-toast="Cota 30h — pagamento simulado">Comprar</button></div>
+      <div class="prod2 locked"><div class="row"><b>Renda em dinheiro</b><span class="chip"><svg><use href="#i-lock"/></svg> Em breve</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Cota que paga rendimento — disponível só quando estruturada pelo caminho regulado (CVM).</div></div>
+      <div class="sec"><span class="eyebrow">Extrato de créditos</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="tx"><div class="ti in"><svg><use href="#i-wallet"/></svg></div><div class="info"><b>Compra · Cota 10h</b><div>Hoje</div></div><span class="amt pos">+10,0 h</span></div>
+        <div class="tx"><div class="ti in"><svg><use href="#i-robot"/></svg></div><div class="info"><b>Crédito gerado</b><div>Robô trabalhou p/ você</div></div><span class="amt pos">+2,0 h</span></div>
+        <div class="tx"><div class="ti out"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Usado · Faxina</b><div>05/08</div></div><span class="amt" style="color:var(--ink)">−4,0 h</span></div>
+      </div>
+      <p class="lawnote">Programa de créditos de serviço — <b>não é previdência nem investimento</b>. A cota dá direito a horas, não a rendimento em dinheiro.</p>
+    </div>
+  </section>
+
+  <nav class="tabbar" id="nav">
+    <button data-go="consent" data-tab="consent"><svg><use href="#i-shield"/></svg>Consent.</button>
+    <button data-go="live" data-tab="live"><svg><use href="#i-video"/></svg>Ao vivo</button>
+    <button data-go="dados" data-tab="dados"><svg><use href="#i-lock"/></svg>Dados</button>
+    <button data-go="cotas" data-tab="cotas"><svg><use href="#i-robot"/></svg>Cotas</button>
+  </nav>
+
+  <div id="toast" style="position:absolute;left:16px;right:16px;bottom:84px;background:#0E1116;color:#fff;padding:13px 16px;border-radius:14px;font-size:13.5px;font-weight:600;text-align:center;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:30"></div>
 </div>
 
 <script>
-  const screens=[...document.querySelectorAll('.screen')];
-  const tabs=[...document.querySelectorAll('#tabs .tab')];
-  const order=['consent','live','sos','privacy','robot'];
-  function go(n){ if(!order.includes(n))return;
-    screens.forEach(s=>s.classList.toggle('active',s.dataset.screen===n));
-    tabs.forEach(t=>t.classList.toggle('sel',t.dataset.go===n));
-    const b=document.querySelector('.screen.active .body'); if(b)b.scrollTop=0;
-  }
-  document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();go(el.dataset.go)}));
-  document.querySelectorAll('.sw:not(.locked)').forEach(s=>s.addEventListener('click',()=>s.classList.toggle('on')));
-  document.addEventListener('keydown',e=>{const c=order.indexOf(document.querySelector('.screen.active').dataset.screen);
-    if(e.key==='ArrowRight')go(order[Math.min(order.length-1,c+1)]);
-    if(e.key==='ArrowLeft')go(order[Math.max(0,c-1)]);});
+  const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
+  const withNav=['consent','live','dados','cotas'], tabFor={consent:'consent',live:'live',sos:'live',dados:'dados',cotas:'cotas'};
+  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
+  let toastT; function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';el.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1900);}
+  document.addEventListener('click',e=>{
+    const sw=e.target.closest('[data-sw]'); if(sw){sw.classList.toggle('on');toast(sw.classList.contains('on')?'Ativado':'Desativado');return;}
+    const g=e.target.closest('[data-go]'); if(g){e.preventDefault();go(g.dataset.go);return;}
+    const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);return;}
+  });
 </script>
-
-</body></html>
+</body>
+</html>

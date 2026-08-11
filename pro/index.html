@@ -1,636 +1,285 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#FF4A24"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Chama"></head><body>
-<title>Chama — Protótipo do app (prestador)</title>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="theme-color" content="#FF4A24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chama">
+<title>Chama · Profissional</title>
+<link rel="stylesheet" href="../app.css">
 <style>
-  :root{
-    --ink:#0E1116; --ink-2:#565E6C; --ink-3:#8A93A2;
-    --line:#E7EAF0; --line-2:#F0F2F6;
-    --canvas:#F3F5F8; --surface:#FFFFFF;
-    --flame:#FF4A24; --flame-600:#E63A17; --flame-tint:#FFEBE4; --ember:#FF8A3D;
-    --ok:#0F9D58; --ok-tint:#E7F6EE; --ok-600:#0b7a44;
-    --r-lg:20px; --r-md:14px; --r-sm:10px;
-    --shadow:0 1px 2px rgba(14,17,22,.04), 0 8px 24px rgba(14,17,22,.06);
-    --shadow-soft:0 1px 2px rgba(14,17,22,.05);
-    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:var(--sans);color:var(--ink);background:
-      radial-gradient(1200px 600px at 15% -10%, #FFF3EE 0%, rgba(255,243,238,0) 55%),
-      radial-gradient(900px 500px at 110% 0%, #EEF2FF 0%, rgba(238,242,255,0) 50%),
-      var(--canvas);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
-
-  .masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--ember),var(--flame) 60%,var(--flame-600));display:grid;place-items:center;box-shadow:0 6px 16px rgba(255,74,36,.35)}
-  .mark svg{width:20px;height:20px;color:#fff}
-  .wordmark{font-weight:800;font-size:22px;letter-spacing:-.03em}
-  .wordmark b{color:var(--flame)} .wordmark .pro{color:var(--ink-3);font-weight:700}
-  .masthead .sub{color:var(--ink-2);font-size:13px;margin-top:2px}
-  .pill-note{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);padding:8px 14px;border-radius:999px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow-soft)}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-
-  .stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:36px;align-items:start}
-  @media(max-width:900px){.stage{grid-template-columns:1fr;gap:28px}}
-  .stage-left{display:flex;flex-direction:column;align-items:center;gap:16px}
-  .screen-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .tab{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:999px;cursor:pointer;transition:.18s}
-  .tab:hover{color:var(--ink);border-color:#D8DCE4}
-  .tab.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .tab:focus-visible{outline:2px solid var(--flame);outline-offset:2px}
-
-  .device{width:390px;max-width:100%;height:812px;background:var(--surface);border-radius:46px;padding:12px;box-shadow:0 2px 6px rgba(14,17,22,.10),0 40px 80px -30px rgba(14,17,22,.45);border:1px solid #E4E7EE;position:relative}
-  .device::before{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#0E1116;border-radius:0 0 16px 16px;z-index:6}
-  .viewport{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;background:var(--canvas)}
-  .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--canvas)}
-  .screen.active{display:flex}
-  @media(prefers-reduced-motion:no-preference){.screen.active{animation:fade .28s ease}@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
-
-  .statusbar{height:52px;flex:0 0 52px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 8px;font-size:13px;font-weight:600}
-  .statusbar .sig svg{width:16px;height:16px}
-  .body{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 18px 22px;scrollbar-width:none}
-  .body::-webkit-scrollbar{width:0}
-  .tabbar{flex:0 0 66px;display:flex;align-items:center;justify-content:space-around;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:6px}
-  .tabbar button{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:10.5px;font-weight:600;color:var(--ink-3);padding:6px 10px;border-radius:12px}
-  .tabbar button svg{width:22px;height:22px}
-  .tabbar button.on{color:var(--flame)}
-
-  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
-  .h1{font-size:24px;font-weight:800;letter-spacing:-.025em;line-height:1.12;text-wrap:balance;margin:4px 0 0}
-  .muted{color:var(--ink-2)}
-  .row{display:flex;align-items:center;gap:10px}
-  .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .avatar{width:40px;height:40px;border-radius:50%;background:#101317;color:#fff;font-weight:700;font-size:14px;display:grid;place-items:center;flex:0 0 40px}
-  .avatar.lg{width:52px;height:52px;flex-basis:52px;font-size:17px}
-  .avatar.flame{background:linear-gradient(150deg,var(--ember),var(--flame-600))}
-
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-soft)}
+  .avail{display:inline-flex;align-items:center;gap:8px;background:var(--oktint);color:var(--ok600);border-radius:999px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;border:0;font-family:inherit}
+  .avail .knob{width:34px;height:20px;border-radius:999px;background:#cfd6e0;position:relative;transition:.18s}
+  .avail .knob::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s}
+  .avail.on .knob{background:var(--ok)}.avail.on .knob::after{left:16px}
   .dark{background:linear-gradient(180deg,#15181E,#0E1116);color:#fff;border:0}
   .dark .eyebrow{color:#9AA3B2}
-  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--line-2);color:var(--ink-2);border:1px solid transparent}
-  .chip svg{width:14px;height:14px}
-  .chip.ok{background:var(--ok-tint);color:var(--ok-600)}
-  .chip.flame{background:var(--flame-tint);color:var(--flame-600)}
-  .chip.ghostwhite{background:rgba(255,255,255,.14);color:#fff}
-
-  .btn{font-family:inherit;font-weight:700;border-radius:var(--r-md);border:1px solid transparent;cursor:pointer;font-size:14.5px;height:52px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:.16s}
-  .btn:focus-visible{outline:2px solid var(--flame);outline-offset:2px}
-  .btn-primary{background:var(--flame);color:#fff;box-shadow:0 8px 18px -6px rgba(255,74,36,.55)}
-  .btn-primary:hover{background:var(--flame-600)}
-  .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
-  .btn-ghost:hover{border-color:#D5D9E1}
-  .btn-white{background:#fff;color:var(--ink)}
-  .btn-sm{height:42px;font-size:13.5px;padding:0 16px;border-radius:12px}
-  .btn-block{width:100%}
-
-  .appbar{display:flex;align-items:center;gap:12px;padding:2px 0 6px}
-  .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink);position:relative}
-  .iconbtn svg{width:19px;height:19px}
-  .appbar .ttl{font-weight:800;letter-spacing:-.02em;font-size:16px;flex:1}
-  .appbar .ttl small{display:block;color:var(--ink-3);font-weight:600;font-size:12px}
-  .cartbadge{position:absolute;top:-5px;right:-5px;background:var(--flame);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
-
-  .section-label{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 12px}
-  .section-label a{color:var(--flame);font-size:13px;font-weight:700;text-decoration:none}
-
-  /* availability toggle */
-  .avail{display:inline-flex;align-items:center;gap:8px;background:var(--ok-tint);color:var(--ok-600);border-radius:999px;padding:6px 10px 6px 12px;font-size:12.5px;font-weight:700}
-  .avail .knob{width:34px;height:20px;border-radius:999px;background:var(--ok);position:relative}
-  .avail .knob::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff}
-
-  /* earnings hero */
-  .big{font-size:34px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:4px}
+  .big{font-size:32px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:4px}
+  .big small{font-size:15px;font-weight:700;color:#9AA3B2}
   .delta{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#59E29B}
   .delta svg{width:14px;height:14px}
-  .spark{width:100%;height:74px;display:block;margin:12px 0 4px}
+  .spark{width:100%;height:70px;display:block;margin:12px 0 4px}
   .split{display:flex;gap:10px;margin-top:12px}
-  .split .box{flex:1;background:rgba(255,255,255,.08);border-radius:14px;padding:11px 12px}
-  .split .box .k{font-size:11px;color:#9AA3B2;letter-spacing:.03em}
-  .split .box .v{font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;letter-spacing:-.01em}
-
-  /* request card */
-  .req{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;margin-top:12px;box-shadow:var(--shadow-soft)}
-  .req .rtop{display:flex;gap:12px;align-items:center}
-  .req .ttl2{font-weight:700;letter-spacing:-.01em}
-  .req .meta{color:var(--ink-2);font-size:12.5px;margin-top:2px;font-variant-numeric:tabular-nums}
-  .req .price{margin-left:auto;text-align:right}
-  .req .price b{font-size:16px;font-variant-numeric:tabular-nums}
-  .req .ract{display:flex;gap:9px;margin-top:12px}
-
-  /* quick grid */
-  .quick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .qcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;transition:.16s;display:flex;gap:11px;align-items:center}
-  .qcard:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:#DFE3EA}
-  .qcard .ico{width:40px;height:40px;border-radius:12px;background:var(--line-2);display:grid;place-items:center;flex:0 0 40px}
-  .qcard .ico svg{width:20px;height:20px;color:var(--ink)}
-  .qcard.flame .ico{background:var(--flame-tint)} .qcard.flame .ico svg{color:var(--flame-600)}
-  .qcard b{font-size:13.5px;letter-spacing:-.01em} .qcard span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:1px}
-
-  /* video */
-  .vhero{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/10;background:
-      radial-gradient(120% 120% at 30% 20%, #2A2F3A, #0E1116);display:grid;place-items:center}
-  .vhero .play{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.16);backdrop-filter:blur(4px);display:grid;place-items:center;border:1px solid rgba(255,255,255,.3)}
+  .split .b{flex:1;background:rgba(255,255,255,.08);border-radius:14px;padding:11px 12px}
+  .split .b .k{font-size:11px;color:#9AA3B2}.split .b .v{font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px}
+  .req{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;margin-top:12px}
+  .req .t{display:flex;gap:12px;align-items:center}
+  .req .price{margin-left:auto;text-align:right}.req .price b{font-size:16px;font-variant-numeric:tabular-nums}
+  .req .price div{font-size:11.5px;color:var(--ink3)}
+  .req .act{display:flex;gap:9px;margin-top:12px}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .qc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:flex;gap:11px;align-items:center}
+  .qc .i{width:40px;height:40px;border-radius:12px;background:var(--tint);display:grid;place-items:center;flex:0 0 40px}
+  .qc .i svg{width:20px;height:20px;color:var(--flame600)}
+  .qc b{font-size:13.5px;letter-spacing:-.01em}.qc span{display:block;font-size:11.5px;color:var(--ink3);margin-top:1px}
+  .vhero{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/10;background:radial-gradient(120% 120% at 30% 20%,#2A2F3A,#0E1116);display:grid;place-items:center;cursor:pointer}
+  .vhero .play{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;border:1px solid rgba(255,255,255,.3)}
   .vhero .play svg{width:26px;height:26px;color:#fff;margin-left:3px}
-  .vhero .vcap{position:absolute;left:14px;bottom:12px;color:#fff}
-  .vhero .vcap .n{font-weight:800;letter-spacing:-.01em}
-  .vhero .vcap .r{font-size:12px;color:#D7DBE2}
-  .vhero .vdur{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;font-variant-numeric:tabular-nums}
-  .vhero .vtag{position:absolute;left:14px;top:12px}
-  .dropzone{border:1.5px dashed #C9CFDA;border-radius:18px;background:var(--surface);padding:26px 18px;text-align:center}
-  .dropzone .ic{width:56px;height:56px;border-radius:16px;background:var(--flame-tint);display:grid;place-items:center;margin:0 auto 12px}
-  .dropzone .ic svg{width:26px;height:26px;color:var(--flame-600)}
-  .tips li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-2);padding:7px 0}
-  .tips li svg{width:17px;height:17px;color:var(--ok);flex:0 0 17px;margin-top:1px}
-  .tips{list-style:none;padding:0;margin:0}
-
-  /* services offered */
-  .svc{display:flex;align-items:center;gap:12px;padding:12px 0}
-  .svc + .svc{border-top:1px solid var(--line-2)}
-  .svc .si{width:38px;height:38px;border-radius:11px;background:var(--line-2);display:grid;place-items:center;flex:0 0 38px}
-  .svc .si svg{width:19px;height:19px;color:var(--ink)}
-  .svc .price{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
-
-  /* portfolio */
+  .vhero .cap{position:absolute;left:14px;bottom:12px;color:#fff}.vhero .cap b{font-weight:800}.vhero .cap div{font-size:12px;color:#D7DBE2}
+  .vhero .dur{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px}
+  .svc{display:flex;align-items:center;gap:12px;padding:12px 0}.svc+.svc{border-top:1px solid var(--line2)}
+  .svc .si{width:38px;height:38px;border-radius:11px;background:var(--line2);display:grid;place-items:center;flex:0 0 38px}.svc .si svg{width:19px;height:19px;color:var(--ink)}
+  .svc .pr{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .job{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
-  .job .ph{height:84px;display:grid;place-items:center;color:#fff}
-  .job .ph svg{width:26px;height:26px;opacity:.9}
-  .job .jb{padding:9px 10px}
-  .job .jb b{font-size:12.5px;letter-spacing:-.01em}
-  .job .jb .st{color:#F5A623;font-size:12px;font-variant-numeric:tabular-nums;margin-top:2px}
-
-  /* reviews */
-  .rsum{display:flex;gap:16px;align-items:center}
-  .rsum .score{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
-  .bars{flex:1}
-  .barrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-3)}
-  .bar{flex:1;height:6px;border-radius:3px;background:var(--line-2);overflow:hidden}
-  .bar i{display:block;height:100%;background:var(--flame)}
-  .review{padding:14px 0;border-top:1px solid var(--line-2)}
-  .review .rh{display:flex;align-items:center;gap:10px}
-  .review .rh .st{color:#F5A623;font-size:12px;margin-left:auto}
-  .review p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.45}
-  .review .sv{font-size:11.5px;color:var(--ink-3);margin-top:6px}
-
-  /* finance */
-  .kv{display:flex;align-items:center;justify-content:space-between;padding:12px 0;font-size:14px}
-  .kv + .kv{border-top:1px solid var(--line-2)}
-  .tx{display:flex;align-items:center;gap:12px;padding:12px 0}
-  .tx + .tx{border-top:1px solid var(--line-2)}
-  .tx .ti{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:0 0 38px}
-  .tx .ti svg{width:18px;height:18px}
-  .tx .ti.in{background:var(--ok-tint);color:var(--ok-600)}
-  .tx .ti.out{background:var(--line-2);color:var(--ink-2)}
-  .tx .info{flex:1;min-width:0}
-  .tx .info b{font-size:13.5px;letter-spacing:-.01em}
-  .tx .info div{font-size:11.5px;color:var(--ink-3);margin-top:1px}
-  .amt{font-weight:800;font-variant-numeric:tabular-nums}
-  .amt.pos{color:var(--ok-600)} .amt.neg{color:var(--ink)}
-  .advance{display:flex;gap:12px;align-items:center;background:var(--flame-tint);border:1px solid #FAD1C5;border-radius:16px;padding:14px}
-  .advance .ic{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:0 0 42px}
-  .advance .ic svg{width:20px;height:20px;color:var(--flame-600)}
-
-  /* store */
-  .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:12px 0}
-  .cats .c{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
-  .cats .c.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .promo{background:linear-gradient(120deg,#15181E,#0E1116);color:#fff;border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center}
-  .promo .ic{width:44px;height:44px;border-radius:12px;background:var(--flame);display:grid;place-items:center;flex:0 0 44px}
-  .promo .ic svg{width:22px;height:22px;color:#fff}
-  .promo b{letter-spacing:-.01em} .promo span{display:block;font-size:12px;color:#B9C0CC;margin-top:2px}
-  .prods{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .job .ph{height:82px;display:grid;place-items:center;color:#fff}.job .ph svg{width:26px;height:26px;opacity:.9}
+  .job .jb{padding:9px 10px}.job .jb b{font-size:12.5px}.job .jb .st{color:#F5A623;font-size:12px;margin-top:2px}
+  .rsum{display:flex;gap:16px;align-items:center}.rsum .sc{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .bars{flex:1}.barrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3)}
+  .bar{flex:1;height:6px;border-radius:3px;background:var(--line2);overflow:hidden}.bar i{display:block;height:100%;background:var(--flame)}
+  .review{padding:14px 0;border-top:1px solid var(--line2)}.review .rh{display:flex;align-items:center;gap:10px}.review .rh .st{color:#F5A623;font-size:12px;margin-left:auto}
+  .review p{margin:8px 0 0;font-size:13px;color:var(--ink2);line-height:1.45}.review .sv{font-size:11.5px;color:var(--ink3);margin-top:6px}
+  .tx{display:flex;align-items:center;gap:12px;padding:11px 0}.tx+.tx{border-top:1px solid var(--line2)}
+  .tx .ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 36px}.tx .ti svg{width:17px;height:17px}
+  .tx .ti.in{background:var(--oktint);color:var(--ok600)}.tx .ti.out{background:var(--line2);color:var(--ink2)}
+  .tx .info{flex:1}.tx .info b{font-size:13.5px}.tx .info div{font-size:11.5px;color:var(--ink3)}
+  .amt{font-weight:800;font-variant-numeric:tabular-nums}.amt.pos{color:var(--ok600)}
+  .advance{display:flex;gap:12px;align-items:center;background:var(--tint);border:1px solid #FAD1C5;border-radius:16px;padding:14px}
+  .advance .i{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:0 0 42px}.advance .i svg{width:20px;height:20px;color:var(--flame600)}
+  .catbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:12px 0}
+  .catbar .c{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+  .catbar .c.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .prods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .prod{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface)}
-  .prod .pimg{height:96px;display:grid;place-items:center;color:#fff}
-  .prod .pimg svg{width:34px;height:34px;opacity:.92}
-  .prod .pb{padding:10px}
-  .prod .pn{font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.2;min-height:30px}
-  .prod .pp{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-  .prod .pp b{font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-  .prod .pp .add{width:32px;height:32px;border-radius:10px;background:var(--flame);color:#fff;border:0;display:grid;place-items:center;cursor:pointer}
-  .prod .pp .add svg{width:17px;height:17px}
-  .prod .inst{font-size:10.5px;color:var(--ink-3);margin-top:3px}
-
-  /* right panel */
-  .panel{display:flex;flex-direction:column;gap:18px}
-  .p-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow-soft)}
-  .p-card h4{margin:0 0 4px;font-size:13px;font-weight:800;letter-spacing:-.01em}
-  .p-card .hint{color:var(--ink-2);font-size:12.5px;margin:0 0 12px;line-height:1.45}
-  .feat{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line-2)}
-  .feat:first-of-type{border-top:0}
-  .feat .fi{width:34px;height:34px;border-radius:10px;background:var(--flame-tint);display:grid;place-items:center;flex:0 0 34px}
-  .feat .fi svg{width:17px;height:17px;color:var(--flame-600)}
-  .feat b{font-size:13px;letter-spacing:-.01em} .feat p{margin:2px 0 0;font-size:12px;color:var(--ink-2);line-height:1.4}
-  .legend{font-size:12.5px;color:var(--ink-2);line-height:1.5}
-  .foot{margin-top:26px;text-align:center;color:var(--ink-3);font-size:12px}
-  .kbd{font:600 11px var(--sans);background:var(--line-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  .prod .pimg{height:92px;display:grid;place-items:center;color:#fff}.prod .pimg svg{width:32px;height:32px;opacity:.92}
+  .prod .pb{padding:10px}.prod .pn{font-size:12.5px;font-weight:600;line-height:1.2;min-height:30px}
+  .prod .pp{display:flex;align-items:center;justify-content:space-between;margin-top:8px}.prod .pp b{font-size:15px;font-variant-numeric:tabular-nums}
+  .prod .add{width:32px;height:32px;border-radius:10px;background:var(--flame);color:#fff;border:0;display:grid;place-items:center;cursor:pointer}.prod .add svg{width:17px;height:17px}
+  .prod .inst{font-size:10.5px;color:var(--ink3);margin-top:3px}
+  .cartbadge{position:absolute;top:-5px;right:-5px;background:var(--flame);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+  .chm{display:flex;gap:12px;align-items:center;cursor:pointer}
+  .chm .i{width:44px;height:44px;border-radius:13px;background:var(--tint);color:var(--flame600);display:grid;place-items:center;flex:0 0 44px}.chm .i svg{width:22px;height:22px}
+  .chm .info{flex:1;min-width:0}.chm .info b{letter-spacing:-.01em}.chm .info div{color:var(--ink2);font-size:12.5px;margin-top:2px}
+  .mrow{display:flex;align-items:center;gap:10px;padding:12px 0}.mrow+.mrow{border-top:1px solid var(--line2)}
+  .mrow .mi{flex:1}.mrow .mi b{font-size:13.5px}.mrow .mi div{font-size:11.5px;color:var(--ink3)}
+  .step{display:flex;align-items:center;gap:6px}.step button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;line-height:1;cursor:pointer;color:var(--ink)}
+  .step b{width:22px;text-align:center;font-variant-numeric:tabular-nums}
 </style>
-
+</head>
+<body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="ic-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7C7 9.9 6 11 6 13a6 6 0 1 0 12 0c0-4.5-3-7.5-6-11Z"/></symbol>
-  <symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></symbol>
-  <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5"/></symbol>
-  <symbol id="ic-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h9"/><circle cx="16.5" cy="13" r="1.4" fill="currentColor" stroke="none"/></symbol>
-  <symbol id="ic-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1-4H5z"/><path d="M4 9v10h16V9M4 9c0 1.5 1 2.5 2.5 2.5S9 10.5 9 9m0 0c0 1.5 1 2.5 2.5 2.5S14 10.5 14 9m0 0c0 1.5 1 2.5 2.5 2.5S19 10.5 19 9"/></symbol>
-  <symbol id="ic-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 3 2.6 5.4 5.9.7-4.4 4 1.2 5.8L12 16.9 6.7 19l1.2-5.8-4.4-4 5.9-.7z"/></symbol>
-  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
-  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
-  <symbol id="ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
-  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
-  <symbol id="ic-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
-  <symbol id="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
-  <symbol id="ic-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
-  <symbol id="ic-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3z"/></symbol>
-  <symbol id="ic-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/></symbol>
-  <symbol id="ic-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5m0 0-4 4m4-4 4 4M5 19h14"/></symbol>
-  <symbol id="ic-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l5-5 4 4 7-8"/><path d="M20 6h-4m4 0v4"/></symbol>
-  <symbol id="ic-arrowup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V6m0 0-6 6m6-6 6 6"/></symbol>
-  <symbol id="ic-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 11a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></symbol>
-  <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
-  <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
-  <symbol id="ic-pix" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6 15.1 5 12 7.4 8.9 5 12 2.6ZM5 8.9 7.4 12 5 15.1 2.6 12 5 8.9Zm14 0L21.4 12 19 15.1 16.6 12 19 8.9ZM12 16.6 15.1 19 12 21.4 8.9 19 12 16.6Z"/></symbol>
-  <symbol id="ic-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3 9 8m6 3-9 9m0 0-3-3m3 3 3-1c0-3 1-5 4-6l3-3-2-2-3 3c-2 3-4 4-6 4l-1 3"/></symbol>
-  <symbol id="ic-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6a4 4 0 0 0-5 5L4 17l3 3 6-6a4 4 0 0 0 5-5l-2 2-2-1-1-2 2-2Z"/></symbol>
-  <symbol id="ic-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6z"/></symbol>
-  <symbol id="ic-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></symbol>
-  <symbol id="ic-gloves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v4m0 0V4.5a1.5 1.5 0 0 1 3 0V10m0 0V6a1.5 1.5 0 0 1 3 0v7a6 6 0 0 1-6 6H9a4 4 0 0 1-4-4c0-2 2-2 2-4Z"/></symbol>
-  <symbol id="ic-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/></symbol>
-  <symbol id="ic-sig" viewBox="0 0 24 24"><path fill="currentColor" d="M2 16h3v4H2zM7 12h3v8H7zM12 8h3v12h-3zM17 4h3v16h-3z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7C7 9.9 6 11 6 13a6 6 0 1 0 12 0c0-4.5-3-7.5-6-11Z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 3 2.6 5.4 5.9.7-4.4 4 1.2 5.8L12 16.9 6.7 19l1.2-5.8-4.4-4 5.9-.7z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3 9 8m6 3-9 9m0 0-3-3m3 3 3-1c0-3 1-5 4-6l3-3-2-2-3 3c-2 3-4 4-6 4l-1 3"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6a4 4 0 0 0-5 5L4 17l3 3 6-6a4 4 0 0 0 5-5l-2 2-2-1-1-2 2-2Z"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6z"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h9"/><circle cx="16.5" cy="13" r="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1-4H5z"/><path d="M4 9v10h16V9"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 11a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l5-5 4 4 7-8"/><path d="M20 6h-4m4 0v4"/></symbol>
+  <symbol id="i-arrowup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V6m0 0-6 6m6-6 6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-pix" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6 15.1 5 12 7.4 8.9 5 12 2.6ZM5 8.9 7.4 12 5 15.1 2.6 12 5 8.9Zm14 0L21.4 12 19 15.1 16.6 12 19 8.9ZM12 16.6 15.1 19 12 21.4 8.9 19 12 16.6Z"/></symbol>
+  <symbol id="i-gloves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v4m0 0V4.5a1.5 1.5 0 0 1 3 0V10m0 0V6a1.5 1.5 0 0 1 3 0v7a6 6 0 0 1-6 6H9a4 4 0 0 1-4-4c0-2 2-2 2-4Z"/></symbol>
 </defs></svg>
 
-<div class="wrap">
-  <div class="masthead">
-    <div class="brand">
-      <div class="mark"><svg><use href="#ic-flame"/></svg></div>
-      <div>
-        <div class="wordmark">Cha<b>ma</b> <span class="pro">· Profissional</span></div>
-        <div class="sub">Área do prestador · vídeo, portfólio, finanças e loja de insumos</div>
+<div id="app">
+
+  <!-- PAINEL -->
+  <section class="screen active" data-screen="painel">
+    <div class="scroll hasnav">
+      <div class="greet">
+        <div style="display:flex;align-items:center;gap:11px"><div class="avatar flame">MA</div>
+          <div><div class="eyebrow">Bom dia</div><div style="font-weight:800;letter-spacing:-.02em">Marcela A.</div></div></div>
+        <button class="avail on" id="avail"><span>Disponível</span><span class="knob"></span></button>
+      </div>
+      <div class="card dark" style="margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">Ganhos da semana</span><span class="delta"><svg><use href="#i-trend"/></svg> +18%</span></div>
+        <div class="big">R$ 1.240,00</div>
+        <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.4)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
+          <path d="M0,56 L50,48 L100,52 L150,32 L200,38 L250,20 L300,10 L300,70 L0,70 Z" fill="url(#g1)"/>
+          <path d="M0,56 L50,48 L100,52 L150,32 L200,38 L250,20 L300,10" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="300" cy="10" r="4" fill="var(--flame)"/></svg>
+        <div class="split"><div class="b"><div class="k">Disponível p/ saque</div><div class="v">R$ 940,00</div></div><div class="b"><div class="k">Em custódia</div><div class="v">R$ 300,00</div></div></div>
+        <button class="btn btn-white btn-sm" style="margin-top:12px" data-go="financas"><svg style="width:17px;height:17px"><use href="#i-wallet"/></svg> Ver finanças</button>
+      </div>
+      <div class="sec"><span class="eyebrow">Novas solicitações</span></div>
+      <div class="req" id="req1">
+        <div class="t"><div class="avatar">AB</div><div><b>Faxina · Ana B.</b><div style="color:var(--ink2);font-size:12.5px;margin-top:2px">Amanhã 09:00 · Pinheiros · 1,2 km</div></div>
+          <div class="price"><b>R$ 150</b><div>líq. R$ 127,50</div></div></div>
+        <div class="act"><button class="btn btn-primary btn-sm" style="flex:1" data-accept>Aceitar</button><button class="btn btn-ghost btn-sm" style="flex:1" data-decline>Recusar</button></div>
+      </div>
+      <p class="muted" style="font-size:11.5px;margin:8px 2px 0">Você escolhe o que aceitar, seus preços e horários — sem exclusividade.</p>
+      <div class="sec"><span class="eyebrow">Atalhos</span></div>
+      <div class="quick">
+        <div class="qc" data-go="perfil"><div class="i"><svg><use href="#i-star"/></svg></div><div><b>Perfil & vídeo</b><span>128 serviços · 4,9</span></div></div>
+        <div class="qc" data-go="chamados"><div class="i"><svg><use href="#i-wrench"/></svg></div><div><b>Chamados</b><span>Montar orçamento</span></div></div>
+        <div class="qc" data-go="financas"><div class="i"><svg><use href="#i-wallet"/></svg></div><div><b>Finanças</b><span>Saque via PIX</span></div></div>
+        <div class="qc" data-go="loja"><div class="i"><svg><use href="#i-store"/></svg></div><div><b>Loja de insumos</b><span>EPI, ferramentas</span></div></div>
+      </div>
+      <a class="listrow" href="../" style="margin-top:14px"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-home"/></svg></div><div class="t"><b>Ir para o app do cliente</b><div>Ver a Chama como quem contrata</div></div><span class="chev"><svg><use href="#i-chev"/></svg></span></a>
+    </div>
+  </section>
+
+  <!-- PERFIL -->
+  <section class="screen" data-screen="perfil">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Meu perfil</div></div>
+      <div class="sec" style="margin-top:0"><span class="eyebrow">Vídeo-depoimento</span></div>
+      <div class="vhero" data-toast="Reproduzindo seu vídeo de apresentação">
+        <div class="play"><svg><use href="#i-play"/></svg></div><div class="dur">0:48</div>
+        <div class="cap"><b>Marcela conta o que faz melhor</b><div>Toque para assistir</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:16px"><div class="avatar lg flame">MA</div>
+        <div style="flex:1"><div style="font-weight:800;letter-spacing:-.02em;font-size:17px;display:flex;align-items:center;gap:6px">Marcela Almeida <svg style="width:16px;height:16px;color:var(--ok)"><use href="#i-shield"/></svg></div>
+          <div class="muted" style="font-size:12.5px">Diarista • Personal organizer · Pinheiros</div></div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px"><span class="chip ok"><svg><use href="#i-check"/></svg> Identidade</span><span class="chip ok"><svg><use href="#i-check"/></svg> Antecedentes</span><span class="chip"><svg><use href="#i-clock"/></svg> Responde em ~10 min</span></div>
+      <div class="sec"><span class="eyebrow">Serviços que ofereço</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="svc"><div class="si"><svg><use href="#i-broom"/></svg></div><div><b>Faxina</b><div class="muted" style="font-size:12px">por diária</div></div><span class="pr">R$ 150</span></div>
+        <div class="svc"><div class="si"><svg><use href="#i-broom"/></svg></div><div><b>Passadoria</b><div class="muted" style="font-size:12px">por hora</div></div><span class="pr">R$ 50</span></div>
+        <div class="svc"><div class="si"><svg><use href="#i-star"/></svg></div><div><b>Organização</b><div class="muted" style="font-size:12px">por hora</div></div><span class="pr">R$ 80</span></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Serviços feitos · 128</span></div>
+      <div class="grid2">
+        <div class="job"><div class="ph" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)"><svg><use href="#i-broom"/></svg></div><div class="jb"><b>Faxina completa</b><div class="st">★ 5,0 · Ana B.</div></div></div>
+        <div class="job"><div class="ph" style="background:linear-gradient(135deg,#10B981,#059669)"><svg><use href="#i-star"/></svg></div><div class="jb"><b>Organização closet</b><div class="st">★ 5,0 · Rui M.</div></div></div>
+        <div class="job"><div class="ph" style="background:linear-gradient(135deg,#F59E0B,#D97706)"><svg><use href="#i-broom"/></svg></div><div class="jb"><b>Pós-obra</b><div class="st">★ 4,8 · Lia P.</div></div></div>
+        <div class="job"><div class="ph" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><svg><use href="#i-broom"/></svg></div><div class="jb"><b>Faxina semanal</b><div class="st">★ 5,0 · Caio S.</div></div></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Avaliações</span></div>
+      <div class="card">
+        <div class="rsum"><div><div class="sc">4,9</div><div class="muted" style="font-size:11.5px">128 avaliações</div></div>
+          <div class="bars"><div class="barrow">5<div class="bar"><i style="width:92%"></i></div></div><div class="barrow">4<div class="bar"><i style="width:7%"></i></div></div><div class="barrow">3<div class="bar"><i style="width:1%"></i></div></div></div></div>
+        <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">AB</div><b style="font-size:13.5px">Ana B.</b><span class="st">★★★★★</span></div><p>“Deixou o apê impecável e foi super pontual. Já reagendei!”</p><div class="sv">Faxina · há 3 dias</div></div>
+        <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">RM</div><b style="font-size:13.5px">Rui M.</b><span class="st">★★★★★</span></div><p>“Organizou o closet inteiro com muito capricho.”</p><div class="sv">Organização · há 1 semana</div></div>
       </div>
     </div>
-    <div class="pill-note"><span class="dot"></span> Navegável — toque nas telas ou use os atalhos abaixo</div>
-  </div>
+  </section>
 
-  <div class="stage">
-    <div class="stage-left">
-      <div class="screen-tabs" id="tabs">
-        <button class="tab sel" data-go="home">Painel</button>
-        <button class="tab" data-go="profile">Perfil & avaliações</button>
-        <button class="tab" data-go="video">Vídeo-depoimento</button>
-        <button class="tab" data-go="finance">Finanças</button>
-        <button class="tab" data-go="store">Loja de insumos</button>
+  <!-- FINANÇAS -->
+  <section class="screen" data-screen="financas">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Finanças</div></div>
+      <div class="card dark">
+        <span class="eyebrow">Disponível para saque</span><div class="big">R$ 940,00</div>
+        <div style="display:flex;gap:9px;margin-top:14px"><button class="btn btn-white btn-sm" style="flex:1" data-toast="Saque via PIX solicitado · cai na hora"><svg style="width:17px;height:17px"><use href="#i-pix"/></svg> Sacar via PIX</button>
+          <button class="btn btn-sm" style="flex:1;background:rgba(255,255,255,.12);color:#fff" data-toast="Antecipação simulada"><svg style="width:17px;height:17px"><use href="#i-arrowup"/></svg> Antecipar</button></div>
+        <div class="split"><div class="b"><div class="k">Em custódia (a receber)</div><div class="v">R$ 300,00</div></div><div class="b"><div class="k">Ganhos no mês</div><div class="v">R$ 3.860,00</div></div></div>
       </div>
-
-      <div class="device"><div class="viewport">
-
-        <!-- ============ PAINEL ============ -->
-        <section class="screen active" data-screen="home">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="between" style="padding:4px 2px 8px">
-              <div class="row">
-                <div class="avatar flame">MA</div>
-                <div><div class="eyebrow">Bom dia</div><div style="font-weight:800;letter-spacing:-.02em">Marcela A.</div></div>
-              </div>
-              <div class="row" style="gap:8px">
-                <div class="avail"><span>Disponível</span><span class="knob"></span></div>
-                <button class="iconbtn" aria-label="Avisos"><svg><use href="#ic-bell"/></svg></button>
-              </div>
-            </div>
-
-            <div class="card dark">
-              <div class="between"><span class="eyebrow">Ganhos da semana</span><span class="delta"><svg><use href="#ic-trend"/></svg> +18%</span></div>
-              <div class="big">R$ 1.240,00</div>
-              <svg class="spark" viewBox="0 0 300 74" preserveAspectRatio="none">
-                <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.4)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
-                <path d="M0,58 L50,50 L100,54 L150,34 L200,40 L250,22 L300,10 L300,74 L0,74 Z" fill="url(#ag)"/>
-                <path d="M0,58 L50,50 L100,54 L150,34 L200,40 L250,22 L300,10" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="300" cy="10" r="4" fill="var(--flame)"/>
-              </svg>
-              <div class="split">
-                <div class="box"><div class="k">Disponível p/ saque</div><div class="v">R$ 940,00</div></div>
-                <div class="box"><div class="k">Em custódia</div><div class="v">R$ 300,00</div></div>
-              </div>
-              <button class="btn btn-white btn-sm btn-block" style="margin-top:12px" data-go="finance"><svg style="width:17px;height:17px"><use href="#ic-wallet"/></svg> Ver finanças</button>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Novas solicitações</span><a href="#" onclick="return false">Ver todas</a></div>
-            <div class="req">
-              <div class="rtop">
-                <div class="avatar">AB</div>
-                <div><div class="ttl2">Faxina · Ana B.</div><div class="meta">Amanhã 09:00 · Pinheiros · 1,2 km</div></div>
-                <div class="price"><b>R$ 150</b><div class="meta" style="margin:0">líq. R$ 127,50</div></div>
-              </div>
-              <div class="ract">
-                <button class="btn btn-primary btn-sm" style="flex:1" data-go="finance">Aceitar</button>
-                <button class="btn btn-ghost btn-sm" style="flex:1">Recusar</button>
-              </div>
-            </div>
-            <p class="muted" style="font-size:11.5px;margin:8px 2px 0">Você escolhe o que aceitar, seus preços e horários — sem exclusividade.</p>
-
-            <div class="section-label"><span class="eyebrow">Atalhos</span></div>
-            <div class="quick">
-              <div class="qcard flame" data-go="video"><div class="ico"><svg><use href="#ic-video"/></svg></div><div><b>Vídeo-depoimento</b><span>Aumente sua conversão</span></div></div>
-              <div class="qcard" data-go="profile"><div class="ico"><svg><use href="#ic-star"/></svg></div><div><b>Portfólio</b><span>128 serviços · 4,9</span></div></div>
-              <div class="qcard" data-go="finance"><div class="ico"><svg><use href="#ic-wallet"/></svg></div><div><b>Finanças</b><span>Saque via PIX</span></div></div>
-              <div class="qcard" data-go="store"><div class="ico"><svg><use href="#ic-store"/></svg></div><div><b>Loja de insumos</b><span>Ferramentas e EPI</span></div></div>
-            </div>
-          </div>
-          <nav class="tabbar">
-            <button class="on" data-go="home"><svg><use href="#ic-home"/></svg>Painel</button>
-            <button data-go="profile"><svg><use href="#ic-user"/></svg>Perfil</button>
-            <button data-go="finance"><svg><use href="#ic-wallet"/></svg>Finanças</button>
-            <button data-go="store"><svg><use href="#ic-store"/></svg>Loja</button>
-          </nav>
-        </section>
-
-        <!-- ============ PERFIL & AVALIAÇÕES ============ -->
-        <section class="screen" data-screen="profile">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar">
-              <button class="iconbtn" data-go="home" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button>
-              <div class="ttl">Meu perfil</div>
-              <button class="iconbtn" aria-label="Editar"><svg><use href="#ic-user"/></svg></button>
-            </div>
-
-            <div class="section-label" style="margin-top:8px"><span class="eyebrow">Vídeo-depoimento</span><a href="#" data-go="video">Regravar</a></div>
-            <div class="vhero" data-go="video" role="button" tabindex="0">
-              <span class="vtag chip ghostwhite"><svg><use href="#ic-flame"/></svg> Depoimento</span>
-              <div class="play"><svg><use href="#ic-play"/></svg></div>
-              <div class="vdur">0:48</div>
-              <div class="vcap"><div class="n">Marcela conta o que faz melhor</div><div class="r">Toque para assistir</div></div>
-            </div>
-
-            <div class="row" style="margin-top:16px;gap:12px">
-              <div class="avatar lg flame">MA</div>
-              <div style="flex:1">
-                <div style="font-weight:800;letter-spacing:-.02em;font-size:17px;display:flex;align-items:center;gap:6px">Marcela Almeida <svg style="width:16px;height:16px;color:var(--ok)"><use href="#ic-shield"/></svg></div>
-                <div class="muted" style="font-size:12.5px">Diarista • Personal organizer · Pinheiros</div>
-              </div>
-            </div>
-            <div class="row" style="flex-wrap:wrap;gap:7px;margin-top:12px">
-              <span class="chip ok"><svg><use href="#ic-check"/></svg> Identidade</span>
-              <span class="chip ok"><svg><use href="#ic-check"/></svg> Antecedentes</span>
-              <span class="chip"><svg><use href="#ic-clock"/></svg> Responde em ~10 min</span>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Serviços que ofereço</span><a href="#" onclick="return false">Editar</a></div>
-            <div class="card" style="padding:4px 16px">
-              <div class="svc"><div class="si"><svg><use href="#ic-broom"/></svg></div><div><b style="letter-spacing:-.01em">Faxina</b><div class="muted" style="font-size:12px">por diária (até 6h)</div></div><span class="price">R$ 150</span></div>
-              <div class="svc"><div class="si"><svg><use href="#ic-broom"/></svg></div><div><b style="letter-spacing:-.01em">Passadoria</b><div class="muted" style="font-size:12px">por hora</div></div><span class="price">R$ 50</span></div>
-              <div class="svc"><div class="si"><svg><use href="#ic-star"/></svg></div><div><b style="letter-spacing:-.01em">Organização</b><div class="muted" style="font-size:12px">por hora</div></div><span class="price">R$ 80</span></div>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Serviços feitos · 128</span><a href="#" onclick="return false">Ver todos</a></div>
-            <div class="grid2">
-              <div class="job"><div class="ph" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)"><svg><use href="#ic-broom"/></svg></div><div class="jb"><b>Faxina completa</b><div class="st">★ 5,0 · Ana B.</div></div></div>
-              <div class="job"><div class="ph" style="background:linear-gradient(135deg,#10B981,#059669)"><svg><use href="#ic-star"/></svg></div><div class="jb"><b>Organização closet</b><div class="st">★ 5,0 · Rui M.</div></div></div>
-              <div class="job"><div class="ph" style="background:linear-gradient(135deg,#F59E0B,#D97706)"><svg><use href="#ic-broom"/></svg></div><div class="jb"><b>Pós-obra</b><div class="st">★ 4,8 · Lia P.</div></div></div>
-              <div class="job"><div class="ph" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><svg><use href="#ic-broom"/></svg></div><div class="jb"><b>Faxina semanal</b><div class="st">★ 5,0 · Caio S.</div></div></div>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Avaliações</span></div>
-            <div class="card">
-              <div class="rsum">
-                <div><div class="score">4,9</div><div class="muted" style="font-size:11.5px">128 avaliações</div></div>
-                <div class="bars">
-                  <div class="barrow">5<div class="bar"><i style="width:92%"></i></div></div>
-                  <div class="barrow">4<div class="bar"><i style="width:7%"></i></div></div>
-                  <div class="barrow">3<div class="bar"><i style="width:1%"></i></div></div>
-                </div>
-              </div>
-              <div class="review">
-                <div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">AB</div><b style="font-size:13.5px">Ana B.</b><span class="st">★★★★★</span></div>
-                <p>“Deixou o apê impecável e foi super pontual. Já reagendei!”</p>
-                <div class="sv">Faxina · há 3 dias</div>
-              </div>
-              <div class="review">
-                <div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">RM</div><b style="font-size:13.5px">Rui M.</b><span class="st">★★★★★</span></div>
-                <p>“Organizou o closet inteiro com muito capricho. Recomendo demais.”</p>
-                <div class="sv">Organização · há 1 semana</div>
-              </div>
-            </div>
-          </div>
-          <nav class="tabbar">
-            <button data-go="home"><svg><use href="#ic-home"/></svg>Painel</button>
-            <button class="on" data-go="profile"><svg><use href="#ic-user"/></svg>Perfil</button>
-            <button data-go="finance"><svg><use href="#ic-wallet"/></svg>Finanças</button>
-            <button data-go="store"><svg><use href="#ic-store"/></svg>Loja</button>
-          </nav>
-        </section>
-
-        <!-- ============ VÍDEO-DEPOIMENTO ============ -->
-        <section class="screen" data-screen="video">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar">
-              <button class="iconbtn" data-go="profile" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button>
-              <div class="ttl">Vídeo de apresentação<small>Seu depoimento pessoal</small></div>
-            </div>
-
-            <p class="muted" style="font-size:13.5px;line-height:1.5;margin:6px 2px 14px">Um vídeo curto de você contando o que faz aumenta muito a confiança de quem contrata. Perfis com vídeo recebem <b style="color:var(--ink)">mais pedidos</b>.</p>
-
-            <div class="vhero">
-              <span class="vtag chip ghostwhite"><svg><use href="#ic-check"/></svg> Publicado</span>
-              <div class="play"><svg><use href="#ic-play"/></svg></div>
-              <div class="vdur">0:48</div>
-              <div class="vcap"><div class="n">Seu depoimento atual</div><div class="r">Gravado em 08/08 · visível no perfil</div></div>
-            </div>
-            <div class="row" style="gap:9px;margin-top:12px">
-              <button class="btn btn-ghost btn-sm" style="flex:1"><svg style="width:17px;height:17px"><use href="#ic-camera"/></svg> Regravar</button>
-              <button class="btn btn-ghost btn-sm" style="flex:1"><svg style="width:17px;height:17px"><use href="#ic-upload"/></svg> Enviar arquivo</button>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Ou grave um novo</span></div>
-            <div class="dropzone">
-              <div class="ic"><svg><use href="#ic-video"/></svg></div>
-              <b style="letter-spacing:-.01em">Grave 30–60 segundos</b>
-              <p class="muted" style="font-size:12.5px;margin:6px 0 14px">Boa luz, câmera na horizontal, fale com calma.</p>
-              <div class="row" style="gap:9px;justify-content:center">
-                <button class="btn btn-primary btn-sm"><svg style="width:17px;height:17px"><use href="#ic-camera"/></svg> Gravar agora</button>
-                <button class="btn btn-ghost btn-sm"><svg style="width:17px;height:17px"><use href="#ic-upload"/></svg> Enviar</button>
-              </div>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">O que dizer</span></div>
-            <ul class="tips card" style="padding:8px 16px">
-              <li><svg><use href="#ic-check"/></svg> Seu nome e há quanto tempo faz esse trabalho</li>
-              <li><svg><use href="#ic-check"/></svg> O que você faz melhor (seu diferencial)</li>
-              <li><svg><use href="#ic-check"/></svg> Cuidados que toma (pontualidade, produtos, segurança)</li>
-              <li><svg><use href="#ic-check"/></svg> Um convite simpático pra fechar o serviço</li>
-            </ul>
-          </div>
-        </section>
-
-        <!-- ============ FINANÇAS ============ -->
-        <section class="screen" data-screen="finance">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar">
-              <button class="iconbtn" data-go="home" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button>
-              <div class="ttl">Finanças</div>
-            </div>
-
-            <div class="card dark">
-              <span class="eyebrow">Disponível para saque</span>
-              <div class="big">R$ 940,00</div>
-              <div class="row" style="gap:9px;margin-top:14px">
-                <button class="btn btn-white btn-sm" style="flex:1"><svg style="width:17px;height:17px"><use href="#ic-pix"/></svg> Sacar via PIX</button>
-                <button class="btn btn-sm" style="flex:1;background:rgba(255,255,255,.12);color:#fff"><svg style="width:17px;height:17px"><use href="#ic-arrowup"/></svg> Antecipar</button>
-              </div>
-              <div class="split">
-                <div class="box"><div class="k">Em custódia (a receber)</div><div class="v">R$ 300,00</div></div>
-                <div class="box"><div class="k">Ganhos no mês</div><div class="v">R$ 3.860,00</div></div>
-              </div>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Ganhos · agosto</span><span class="chip"><svg><use href="#ic-trend"/></svg> +18%</span></div>
-            <div class="card">
-              <svg class="spark" viewBox="0 0 300 74" preserveAspectRatio="none">
-                <defs><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.28)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
-                <path d="M0,60 L60,52 L120,56 L180,38 L240,30 L300,16 L300,74 L0,74 Z" fill="url(#ag2)"/>
-                <path d="M0,60 L60,52 L120,56 L180,38 L240,30 L300,16" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="300" cy="16" r="4" fill="var(--flame)"/>
-              </svg>
-              <div class="kv" style="padding-top:6px"><span class="muted">Recebido (líquido)</span><span class="amt">R$ 3.281,00</span></div>
-              <div class="kv"><span class="muted">Comissão Chama (15%)</span><span class="amt neg">− R$ 579,00</span></div>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Precisa agora?</span></div>
-            <div class="advance">
-              <div class="ic"><svg><use href="#ic-arrowup"/></svg></div>
-              <div style="flex:1"><b style="letter-spacing:-.01em">Antecipe R$ 300 em custódia</b><div class="muted" style="font-size:12px">Receba hoje por uma pequena taxa</div></div>
-              <button class="btn btn-primary btn-sm">Antecipar</button>
-            </div>
-
-            <div class="section-label"><span class="eyebrow">Extrato</span><a href="#" onclick="return false">Exportar</a></div>
-            <div class="card" style="padding:4px 16px">
-              <div class="tx"><div class="ti in"><svg><use href="#ic-pix"/></svg></div><div class="info"><b>Faxina · Ana B.</b><div>Hoje · líquido</div></div><span class="amt pos">+ R$ 127,50</span></div>
-              <div class="tx"><div class="ti out"><svg><use href="#ic-flame"/></svg></div><div class="info"><b>Comissão Chama</b><div>Hoje · 15%</div></div><span class="amt neg">− R$ 22,50</span></div>
-              <div class="tx"><div class="ti out"><svg><use href="#ic-arrowup"/></svg></div><div class="info"><b>Saque via PIX</b><div>Ontem</div></div><span class="amt neg">− R$ 500,00</span></div>
-              <div class="tx"><div class="ti out"><svg><use href="#ic-store"/></svg></div><div class="info"><b>Loja · Kit limpeza pro</b><div>3× de R$ 63,00</div></div><span class="amt neg">− R$ 63,00</span></div>
-            </div>
-          </div>
-          <nav class="tabbar">
-            <button data-go="home"><svg><use href="#ic-home"/></svg>Painel</button>
-            <button data-go="profile"><svg><use href="#ic-user"/></svg>Perfil</button>
-            <button class="on" data-go="finance"><svg><use href="#ic-wallet"/></svg>Finanças</button>
-            <button data-go="store"><svg><use href="#ic-store"/></svg>Loja</button>
-          </nav>
-        </section>
-
-        <!-- ============ LOJA DE INSUMOS ============ -->
-        <section class="screen" data-screen="store">
-          <div class="statusbar"><span>9:41</span><span class="sig"><svg><use href="#ic-sig"/></svg></span></div>
-          <div class="body">
-            <div class="appbar">
-              <button class="iconbtn" data-go="home" aria-label="Voltar"><svg><use href="#ic-back"/></svg></button>
-              <div class="ttl">Loja<small>Ferramentas e insumos</small></div>
-              <button class="iconbtn" aria-label="Carrinho"><svg><use href="#ic-cart"/></svg><span class="cartbadge">2</span></button>
-            </div>
-
-            <div class="promo">
-              <div class="ic"><svg><use href="#ic-wallet"/></svg></div>
-              <div><b>Pague com seu saldo Chama</b><span>Ou parcele em até 3× sem juros direto dos seus ganhos</span></div>
-            </div>
-
-            <div class="cats">
-              <span class="c sel">Tudo</span><span class="c">Limpeza</span><span class="c">EPI</span><span class="c">Elétrica</span><span class="c">Pintura</span><span class="c">Ferramentas</span>
-            </div>
-
-            <div class="prods">
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)"><svg><use href="#ic-broom"/></svg></div>
-                <div class="pb"><div class="pn">Kit limpeza profissional · 12 itens</div><div class="pp"><b>R$ 189</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">3× de R$ 63 sem juros</div></div>
-              </div>
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#0EA5E9,#0369A1)"><svg><use href="#ic-drop"/></svg></div>
-                <div class="pb"><div class="pn">Aspirador de pó profissional 1400W</div><div class="pp"><b>R$ 899</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">até 12× no saldo</div></div>
-              </div>
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#10B981,#047857)"><svg><use href="#ic-gloves"/></svg></div>
-                <div class="pb"><div class="pn">Luvas nitrílicas · caixa 100un</div><div class="pp"><b>R$ 59</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">EPI · à vista</div></div>
-              </div>
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#F59E0B,#B45309)"><svg><use href="#ic-wrench"/></svg></div>
-                <div class="pb"><div class="pn">Furadeira/parafusadeira 650W</div><div class="pp"><b>R$ 329</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">3× de R$ 109,67</div></div>
-              </div>
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#EF4444,#B91C1C)"><svg><use href="#ic-bolt"/></svg></div>
-                <div class="pb"><div class="pn">Kit EPI eletricista · NR-10</div><div class="pp"><b>R$ 249</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">3× de R$ 83</div></div>
-              </div>
-              <div class="prod">
-                <div class="pimg" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><svg><use href="#ic-drop"/></svg></div>
-                <div class="pb"><div class="pn">Tinta acrílica premium · 18L</div><div class="pp"><b>R$ 279</b><button class="add" aria-label="Adicionar"><svg><use href="#ic-plus"/></svg></button></div><div class="inst">3× de R$ 93</div></div>
-              </div>
-            </div>
-
-            <div class="section-label" style="margin-top:20px"><span class="eyebrow">Assinatura de insumos</span></div>
-            <div class="card" style="display:flex;gap:12px;align-items:center;cursor:pointer">
-              <div class="qcard flame" style="padding:0;border:0;box-shadow:none"><div class="ico"><svg><use href="#ic-store"/></svg></div></div>
-              <div style="flex:1"><b style="letter-spacing:-.01em">Reponha todo mês, automático</b><div class="muted" style="font-size:12.5px">Produtos de limpeza na sua porta · cancele quando quiser</div></div>
-              <svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#ic-chev"/></svg>
-            </div>
-          </div>
-          <nav class="tabbar">
-            <button data-go="home"><svg><use href="#ic-home"/></svg>Painel</button>
-            <button data-go="profile"><svg><use href="#ic-user"/></svg>Perfil</button>
-            <button data-go="finance"><svg><use href="#ic-wallet"/></svg>Finanças</button>
-            <button class="on" data-go="store"><svg><use href="#ic-store"/></svg>Loja</button>
-          </nav>
-        </section>
-
-      </div></div>
+      <div class="sec"><span class="eyebrow">Ganhos · agosto</span><span class="chip"><svg><use href="#i-trend"/></svg> +18%</span></div>
+      <div class="card">
+        <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.28)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
+          <path d="M0,58 L60,50 L120,54 L180,36 L240,28 L300,14 L300,70 L0,70 Z" fill="url(#g2)"/><path d="M0,58 L60,50 L120,54 L180,36 L240,28 L300,14" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="300" cy="14" r="4" fill="var(--flame)"/></svg>
+        <div class="kv" style="padding-top:6px"><span class="muted">Recebido (líquido)</span><span class="amt">R$ 3.281,00</span></div>
+        <div class="kv"><span class="muted">Comissão Chama (15%)</span><span class="amt" style="color:var(--ink)">− R$ 579,00</span></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Precisa agora?</span></div>
+      <div class="advance"><div class="i"><svg><use href="#i-arrowup"/></svg></div><div style="flex:1"><b style="letter-spacing:-.01em">Antecipe R$ 300 em custódia</b><div class="muted" style="font-size:12px">Receba hoje por uma pequena taxa</div></div><button class="btn btn-primary btn-sm" style="width:auto;padding:0 16px" data-toast="Antecipação simulada">Antecipar</button></div>
+      <div class="sec"><span class="eyebrow">Extrato</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="tx"><div class="ti in"><svg><use href="#i-pix"/></svg></div><div class="info"><b>Faxina · Ana B.</b><div>Hoje · líquido</div></div><span class="amt pos">+ R$ 127,50</span></div>
+        <div class="tx"><div class="ti out"><svg><use href="#i-flame"/></svg></div><div class="info"><b>Comissão Chama</b><div>Hoje · 15%</div></div><span class="amt" style="color:var(--ink)">− R$ 22,50</span></div>
+        <div class="tx"><div class="ti out"><svg><use href="#i-arrowup"/></svg></div><div class="info"><b>Saque via PIX</b><div>Ontem</div></div><span class="amt" style="color:var(--ink)">− R$ 500,00</span></div>
+        <div class="tx"><div class="ti out"><svg><use href="#i-store"/></svg></div><div class="info"><b>Loja · Kit limpeza pro</b><div>3× de R$ 63,00</div></div><span class="amt" style="color:var(--ink)">− R$ 63,00</span></div>
+      </div>
     </div>
+  </section>
 
-    <!-- ============ RIGHT PANEL ============ -->
-    <aside class="panel">
-      <div class="p-card">
-        <h4>Área do prestador · o que entra</h4>
-        <p class="hint">Tudo que você pediu, na mesma linguagem fintech premium da Chama.</p>
-        <div class="feat"><div class="fi"><svg><use href="#ic-video"/></svg></div><div><b>Vídeo-depoimento</b><p>Gravar/enviar um vídeo pessoal contando o que sabe fazer; vira destaque do perfil.</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-star"/></svg></div><div><b>Serviços feitos + avaliações</b><p>Portfólio com fotos e as notas/comentários de outros clientes.</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-wallet"/></svg></div><div><b>Gestão de finanças</b><p>Saldo, custódia, saque PIX instantâneo, antecipação e extrato (com a comissão transparente).</p></div></div>
-        <div class="feat"><div class="fi"><svg><use href="#ic-store"/></svg></div><div><b>Loja de ferramentas e insumos</b><p>Compra de EPI, ferramentas e produtos — parcelável no próprio saldo. Nova fonte de receita.</p></div></div>
+  <!-- LOJA -->
+  <section class="screen" data-screen="loja">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Loja<small>Ferramentas e insumos</small></div>
+        <button class="iconbtn" aria-label="Carrinho" data-toast="Carrinho" style="position:relative"><svg><use href="#i-cart"/></svg><span class="cartbadge" id="cartN" style="display:none">0</span></button></div>
+      <div class="card dark" style="display:flex;gap:12px;align-items:center"><div class="i" style="width:44px;height:44px;border-radius:12px;background:var(--flame);display:grid;place-items:center;flex:0 0 44px"><svg style="width:22px;height:22px;color:#fff"><use href="#i-wallet"/></svg></div><div><b style="letter-spacing:-.01em">Pague com seu saldo Chama</b><div style="font-size:12px;color:#B9C0CC;margin-top:2px">Ou parcele em até 3× sem juros dos seus ganhos</div></div></div>
+      <div class="catbar"><span class="c sel">Tudo</span><span class="c">Limpeza</span><span class="c">EPI</span><span class="c">Elétrica</span><span class="c">Pintura</span></div>
+      <div class="prods">
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)"><svg><use href="#i-broom"/></svg></div><div class="pb"><div class="pn">Kit limpeza profissional · 12 itens</div><div class="pp"><b>R$ 189</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">3× de R$ 63 sem juros</div></div></div>
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#0EA5E9,#0369A1)"><svg><use href="#i-drop"/></svg></div><div class="pb"><div class="pn">Aspirador profissional 1400W</div><div class="pp"><b>R$ 899</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">até 12× no saldo</div></div></div>
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#10B981,#047857)"><svg><use href="#i-gloves"/></svg></div><div class="pb"><div class="pn">Luvas nitrílicas · caixa 100un</div><div class="pp"><b>R$ 59</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">EPI · à vista</div></div></div>
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#F59E0B,#B45309)"><svg><use href="#i-wrench"/></svg></div><div class="pb"><div class="pn">Furadeira/parafusadeira 650W</div><div class="pp"><b>R$ 329</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">3× de R$ 109,67</div></div></div>
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#EF4444,#B91C1C)"><svg><use href="#i-bolt"/></svg></div><div class="pb"><div class="pn">Kit EPI eletricista · NR-10</div><div class="pp"><b>R$ 249</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">3× de R$ 83</div></div></div>
+        <div class="prod"><div class="pimg" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><svg><use href="#i-drop"/></svg></div><div class="pb"><div class="pn">Tinta acrílica premium · 18L</div><div class="pp"><b>R$ 279</b><button class="add" data-add aria-label="Adicionar"><svg><use href="#i-plus"/></svg></button></div><div class="inst">3× de R$ 93</div></div></div>
       </div>
+    </div>
+  </section>
 
-      <div class="p-card">
-        <h4>Decisões de UX</h4>
-        <p class="legend">
-          <b>Autonomia visível</b> — aceitar/recusar, preços próprios, sem exclusividade (protege contra vínculo, STF Tema 1291).<br><br>
-          <b>Transparência financeira</b> — comissão e custódia sempre à mostra; saque PIX e antecipação como alavancas de retenção.<br><br>
-          <b>Loja como fintech</b> — pagar com saldo/parcelar liga ganhos e insumos num só fluxo.
-        </p>
+  <!-- CHAMADOS -->
+  <section class="screen" data-screen="chamados">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Chamados abertos<small>Aguardando orçamento</small></div></div>
+      <div class="card chm" data-go="orcamento"><div class="i"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Pintar a parede da sala</b><div>Pinheiros · há 5 min</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
+      <div class="card chm" data-go="orcamento" style="margin-top:12px"><div class="i"><svg><use href="#i-wrench"/></svg></div><div class="info"><b>Arrumar a pia da cozinha</b><div>Vila Madalena · há 22 min</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
+      <div class="card chm" data-go="orcamento" style="margin-top:12px"><div class="i"><svg><use href="#i-drop"/></svg></div><div class="info"><b>Limpar tapete manchado de vinho</b><div>Itaim · há 1 h</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
+    </div>
+  </section>
+
+  <!-- MONTAR ORÇAMENTO -->
+  <section class="screen" data-screen="orcamento">
+    <div class="scroll">
+      <div class="app-top"><button class="iconbtn" data-go="chamados" aria-label="Voltar"><svg><use href="#i-back"/></svg></button><div class="ttl">Montar orçamento<small>Pintar a parede da sala</small></div></div>
+      <div class="sec" style="margin-top:0"><span class="eyebrow">Mão de obra</span></div>
+      <input id="labor" inputmode="numeric" placeholder="R$ 0,00" class="field" style="width:100%;border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface);font-size:15px;font-family:inherit;color:var(--ink)">
+      <p class="muted" style="font-size:12px;margin:6px 2px 0">Você cobra só a mão de obra — os materiais vêm do marketplace pelo melhor preço.</p>
+      <div class="sec"><span class="eyebrow">Materiais necessários</span></div>
+      <div class="card" style="padding:4px 16px" id="mats">
+        <div class="mrow" data-mat><div class="mi"><b>Tinta acrílica 18L</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
+        <div class="mrow" data-mat><div class="mi"><b>Rolo de pintura 23cm</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
+        <div class="mrow" data-mat><div class="mi"><b>Massa corrida 25kg</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
+        <div class="mrow" data-mat><div class="mi"><b>Fita crepe</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
       </div>
+    </div>
+    <div class="footbtn"><button class="btn btn-primary" id="sendQuote">Enviar orçamento</button></div>
+  </section>
 
-      <div class="p-card">
-        <h4>Consistência</h4>
-        <p class="legend">Mesmos tokens do app do cliente: base clara, <b>uma chama</b> de accent, números tabulares, cards com hairline. Cliente e prestador parecem a mesma marca.</p>
-      </div>
-    </aside>
-  </div>
+  <nav class="tabbar" id="nav">
+    <button data-go="painel" data-tab="painel"><svg><use href="#i-home"/></svg>Painel</button>
+    <button data-go="chamados" data-tab="chamados"><svg><use href="#i-wrench"/></svg>Chamados</button>
+    <button data-go="financas" data-tab="financas"><svg><use href="#i-wallet"/></svg>Finanças</button>
+    <button data-go="loja" data-tab="loja"><svg><use href="#i-store"/></svg>Loja</button>
+  </nav>
 
-  <div class="foot">Protótipo estático do app do prestador · próximo: implementar no Flutter (flavor <b>pro_app</b>). Atalhos: <span class="kbd">←</span> <span class="kbd">→</span> trocam de tela.</div>
+  <div id="toast" style="position:absolute;left:16px;right:16px;bottom:84px;background:#0E1116;color:#fff;padding:13px 16px;border-radius:14px;font-size:13.5px;font-weight:600;text-align:center;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:30"></div>
 </div>
 
 <script>
-  const screens = Array.from(document.querySelectorAll('.screen'));
-  const tabs = Array.from(document.querySelectorAll('#tabs .tab'));
-  const order = ['home','profile','video','finance','store'];
-  function go(name){
-    if(!order.includes(name)) return;
-    screens.forEach(s=>s.classList.toggle('active', s.dataset.screen===name));
-    tabs.forEach(t=>t.classList.toggle('sel', t.dataset.go===name));
-    const body = document.querySelector('.screen.active .body');
-    if(body) body.scrollTop = 0;
-  }
-  document.querySelectorAll('[data-go]').forEach(el=>{
-    el.addEventListener('click', e=>{ e.stopPropagation(); go(el.dataset.go); });
-    el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go(el.dataset.go);} });
+  const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
+  const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados'};
+  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
+  let toastT; function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';el.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1900);}
+  document.addEventListener('click',e=>{
+    const g=e.target.closest('[data-go]'); if(g){e.preventDefault();go(g.dataset.go);return;}
+    const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);return;}
+    const av=e.target.closest('#avail'); if(av){av.classList.toggle('on');toast(av.classList.contains('on')?'Você está disponível':'Você ficou indisponível');return;}
+    const ac=e.target.closest('[data-accept]'); if(ac){document.getElementById('req1').style.display='none';toast('Chamado aceito! Adicionado à sua agenda.');return;}
+    const dc=e.target.closest('[data-decline]'); if(dc){document.getElementById('req1').style.display='none';toast('Chamado recusado.');return;}
+    const add=e.target.closest('[data-add]'); if(add){cart++;const b=document.getElementById('cartN');b.textContent=cart;b.style.display='grid';toast('Adicionado ao carrinho');return;}
+    const cc=e.target.closest('.catbar .c'); if(cc){document.querySelectorAll('.catbar .c').forEach(x=>x.classList.remove('sel'));cc.classList.add('sel');return;}
+    const inc=e.target.closest('[data-inc]'); if(inc){const q=inc.closest('.mrow').querySelector('[data-q]');q.textContent=(+q.textContent+1);return;}
+    const dec=e.target.closest('[data-dec]'); if(dec){const q=dec.closest('.mrow').querySelector('[data-q]');q.textContent=Math.max(0,+q.textContent-1);return;}
   });
-  document.addEventListener('keydown', e=>{
-    const cur = order.indexOf(document.querySelector('.screen.active').dataset.screen);
-    if(e.key==='ArrowRight') go(order[Math.min(order.length-1,cur+1)]);
-    if(e.key==='ArrowLeft')  go(order[Math.max(0,cur-1)]);
-  });
+  let cart=0;
+  document.getElementById('sendQuote').addEventListener('click',()=>{const n=[...document.querySelectorAll('#mats [data-q]')].reduce((s,q)=>s+ +q.textContent,0);toast('Orçamento enviado ao cliente'+(n?` · ${n} materiais`:''));setTimeout(()=>go('chamados'),700);});
 </script>
-
-</body></html>
+</body>
+</html>
