@@ -57,18 +57,18 @@
           <input id="need" placeholder="Ex.: “tá vazando embaixo da pia”…" />
         </label>
         <div class="cta">
-          <button class="btn btn-primary" data-go="results">Buscar profissional</button>
+          <button class="btn btn-primary" id="searchBtn">Buscar profissional</button>
           <button class="btn btn-ghost btn-ico" aria-label="Falar"><svg style="width:20px;height:20px"><use href="#i-mic"/></svg></button>
         </div>
       </div>
       <div class="sec"><span class="eyebrow">Categorias</span></div>
       <div class="cats">
-        <div class="cat flame" data-go="results"><div class="i"><svg><use href="#i-broom"/></svg></div><div class="l">Limpeza</div></div>
-        <div class="cat" data-go="results"><div class="i"><svg><use href="#i-wrench"/></svg></div><div class="l">Reparos</div></div>
-        <div class="cat" data-go="results"><div class="i"><svg><use href="#i-bolt"/></svg></div><div class="l">Elétrica</div></div>
-        <div class="cat" data-go="results"><div class="i"><svg><use href="#i-snow"/></svg></div><div class="l">Ar-cond.</div></div>
-        <div class="cat" data-go="results"><div class="i"><svg><use href="#i-sciss"/></svg></div><div class="l">Beleza</div></div>
-        <div class="cat" data-go="results"><div class="i"><svg><use href="#i-box"/></svg></div><div class="l">Montagem</div></div>
+        <div class="cat flame" data-term="faxina"><div class="i"><svg><use href="#i-broom"/></svg></div><div class="l">Limpeza</div></div>
+        <div class="cat" data-term="encanador reparo"><div class="i"><svg><use href="#i-wrench"/></svg></div><div class="l">Reparos</div></div>
+        <div class="cat" data-term="eletricista tomada"><div class="i"><svg><use href="#i-bolt"/></svg></div><div class="l">Elétrica</div></div>
+        <div class="cat" data-term="ar-condicionado"><div class="i"><svg><use href="#i-snow"/></svg></div><div class="l">Ar-cond.</div></div>
+        <div class="cat" data-term="manicure cabelo"><div class="i"><svg><use href="#i-sciss"/></svg></div><div class="l">Beleza</div></div>
+        <div class="cat" data-term="montar móvel"><div class="i"><svg><use href="#i-box"/></svg></div><div class="l">Montagem</div></div>
       </div>
       <div class="sec"><span class="eyebrow">Seu próximo serviço</span></div>
       <div class="card upnext" data-go="agenda">
@@ -88,12 +88,13 @@
     <div class="scroll">
       <div class="app-top">
         <button class="iconbtn" data-go="home" aria-label="Voltar"><svg><use href="#i-back"/></svg></button>
-        <div class="ttl">Faxina · avulsa<small>Pinheiros · São Paulo</small></div>
+        <div class="ttl" id="resTitle">Profissionais<small>Pinheiros · São Paulo</small></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 2px">
-        <span class="muted" style="font-size:13px"><b style="color:var(--ink)">8</b> profissionais verificados perto</span>
+        <span class="muted" id="resCount" style="font-size:13px">profissionais verificados perto</span>
         <span class="chip"><svg><use href="#i-pin"/></svg> até 20 km</span>
       </div>
+      <div id="proList">
       <div class="pro best" data-go="book">
         <span class="best-tag"><svg><use href="#i-flame"/></svg> Melhor match</span>
         <div class="pro-top">
@@ -121,6 +122,7 @@
         <div class="badges"><span class="chip ok"><svg><use href="#i-check"/></svg> Identidade</span><span class="chip">Diarista</span></div>
         <button class="btn btn-ghost btn-sm" style="margin-top:13px" data-go="book">Agendar</button>
       </div>
+      </div>
     </div>
   </section>
 
@@ -129,7 +131,7 @@
     <div class="scroll">
       <div class="app-top">
         <button class="iconbtn" data-go="results" aria-label="Voltar"><svg><use href="#i-back"/></svg></button>
-        <div class="ttl">Agendar<small>Marcela Almeida · Faxina</small></div>
+        <div class="ttl">Agendar<small id="bookPro">Marcela Almeida · Faxina</small></div>
       </div>
       <div class="sec"><span class="eyebrow">Escolha o dia</span></div>
       <div class="days" id="days">
@@ -149,13 +151,13 @@
       </div>
       <div class="sec"><span class="eyebrow">Resumo</span></div>
       <div class="card">
-        <div class="kv"><span class="muted">Faxina avulsa (até 6h)</span><span class="v">R$ 150,00</span></div>
+        <div class="kv"><span class="muted" id="bookSvc">Serviço</span><span class="v" id="bookPrice">R$ 150,00</span></div>
         <div class="kv"><span class="muted">Taxa de serviço</span><span class="v">Grátis</span></div>
-        <div class="kv tot"><span>Total</span><span class="v">R$ 150,00</span></div>
+        <div class="kv tot"><span>Total</span><span class="v" id="bookTotal">R$ 150,00</span></div>
         <div class="escrow"><svg><use href="#i-shield"/></svg><span>Você paga por <b>PIX</b>, mas o valor fica <b>em custódia</b> e só é liberado à profissional <b>após o serviço</b>.</span></div>
       </div>
     </div>
-    <div class="footbtn"><button class="btn btn-primary" data-go="confirm"><svg style="width:18px;height:18px"><use href="#i-pix"/></svg> Confirmar e pagar · R$ 150,00</button></div>
+    <div class="footbtn"><button class="btn btn-primary" id="confirmBtn"><svg style="width:18px;height:18px"><use href="#i-pix"/></svg> <span id="confirmLabel">Confirmar e pagar</span></button></div>
   </section>
 
   <!-- CONFIRM -->
@@ -163,10 +165,10 @@
     <div class="confirm">
       <div class="seal"><svg><use href="#i-check"/></svg></div>
       <h2>Agendamento confirmado</h2>
-      <p>Marcela chega <b>terça, 12 · 09:00</b>.<br>Você recebe o “a caminho” no dia.</p>
+      <p id="confMsg">Você recebe o “a caminho” no dia.</p>
       <div class="card" style="width:100%;margin-top:22px;text-align:left">
-        <div style="display:flex;gap:12px;align-items:center"><div class="avatar lg flame">MA</div>
-          <div style="flex:1"><b>Marcela Almeida</b><div class="muted" style="font-size:12.5px"><span class="stars">★</span> 4,9 · verificada</div></div>
+        <div style="display:flex;gap:12px;align-items:center"><div class="avatar lg flame" id="confAv">MA</div>
+          <div style="flex:1"><b id="confPro">Marcela Almeida</b><div class="muted" style="font-size:12.5px"><span class="stars">★</span> 4,9 · verificada</div></div>
           <span class="chip ok"><svg><use href="#i-check"/></svg> Pago</span></div>
         <div class="escrow" style="margin-top:14px"><svg><use href="#i-shield"/></svg><span>Liberamos o pagamento à Marcela só depois de você confirmar a conclusão.</span></div>
       </div>
@@ -281,6 +283,84 @@
   document.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.opt').forEach(x=>x.classList.remove('pick'));o.classList.add('pick');}));
   // service worker (instalável / offline)
   if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+</script>
+<script>
+/* ---- Integração com o backend real (Supabase na nuvem) ---- */
+(function(){
+  const API='https://rceowmrunmxdwrnurfjv.supabase.co/functions/v1/api';
+  const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZW93bXJ1bm14ZHdybnVyZmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjQ3NjIsImV4cCI6MjEwMjA0MDc2Mn0.PPF6BHRCgY4QVuPrqqsbslFQCQNFjrf6-c00otA6rlQ';
+  const CUSTOMER='3333c3cf-d602-4631-9e6e-c09c6a306dbc';
+  const el=id=>document.getElementById(id);
+  const money=c=>'R$ '+(Number(c)/100).toFixed(2).replace('.',',');
+  async function api(action,body){
+    const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
+    return {status:r.status, j:await r.json().catch(()=>({error:'resposta inválida'}))};
+  }
+  const sel={};
+  function renderPros(m){
+    sel.serviceId=m.serviceId; sel.serviceName=m.serviceName||'Serviço'; sel.basePrice=m.basePriceCents||15000;
+    el('resTitle').innerHTML=(m.serviceName||'Profissionais')+'<small>Pinheiros · São Paulo</small>';
+    el('resCount').innerHTML='<b style="color:var(--ink)">'+m.count+'</b> profissional(is) verificado(s)';
+    window.__pros=m.pros||[];
+    if(!m.pros||!m.pros.length){ el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Nenhum profissional disponível para isso ainda.</div>'; return; }
+    el('proList').innerHTML=m.pros.map(function(p,i){
+      const nm=p.name||'Profissional', ini=nm.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(), best=i===0;
+      return '<div class="pro'+(best?' best':'')+'">'+(best?'<span class="best-tag"><svg><use href="#i-flame"/></svg> Melhor match</span>':'')+
+        '<div class="pro-top"><div class="avatar lg'+(best?' flame':'')+'">'+ini+'</div>'+
+        '<div class="pro-id"><div class="pro-name">'+nm+' <svg><use href="#i-shield"/></svg></div>'+
+        '<div class="pro-meta"><span class="stars">★</span> '+Number(p.rating).toFixed(1).replace('.',',')+' · '+p.jobsCompleted+' serviços · '+Number(p.distanceKm).toFixed(1).replace('.',',')+' km</div></div>'+
+        '<div class="pro-price"><span class="fr">a partir de</span><b>'+money(sel.basePrice)+'</b></div></div>'+
+        '<div class="badges"><span class="chip ok"><svg><use href="#i-check"/></svg> Identidade</span><span class="chip">'+(p.trustTier==='pro_certified'?'Certificado':'Verificado')+'</span></div>'+
+        '<button class="btn '+(best?'btn-primary':'btn-ghost')+' btn-sm bookbtn" style="margin-top:13px" data-i="'+i+'">Agendar</button></div>';
+    }).join('');
+  }
+  async function search(term){
+    el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Buscando profissionais…</div>';
+    go('results');
+    try{
+      const {j:intk}=await api('intake',{customerId:CUSTOMER,rawText:term});
+      if(!intk.requestId) throw new Error(intk.error||'falha no intake');
+      sel.requestId=intk.requestId;
+      const {j:m}=await api('match',{requestId:intk.requestId});
+      if(m.error) throw new Error(m.error);
+      renderPros(m);
+    }catch(e){ el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Não foi possível buscar agora ('+e.message+').</div>'; }
+  }
+  function pickPro(i){
+    const p=(window.__pros||[])[i]; if(!p)return;
+    sel.proId=p.proId; sel.priceCents=sel.basePrice; sel.name=p.name;
+    el('bookPro').textContent=(p.name||'Profissional')+' · '+sel.serviceName;
+    el('bookSvc').textContent=sel.serviceName;
+    el('bookPrice').textContent=money(sel.priceCents);
+    el('bookTotal').textContent=money(sel.priceCents);
+    el('confirmLabel').textContent='Confirmar e pagar · '+money(sel.priceCents);
+    go('book');
+  }
+  function selectedDate(){
+    const d=document.querySelector('#days .day.sel b'), dd=d?d.textContent.trim().padStart(2,'0'):'12';
+    const t=document.querySelector('#slots .slot.sel'), hh=t?t.textContent.trim():'09:00';
+    return '2026-08-'+dd+'T'+hh+':00Z';
+  }
+  async function doBook(){
+    if(!sel.proId){ go('home'); return; }
+    const btn=el('confirmBtn'); btn.disabled=true;
+    try{
+      const {j}=await api('create-booking',{customerId:CUSTOMER,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId});
+      if(j.needsFormalization){ document.getElementById('sheet').classList.add('open'); return; }
+      if(j.error){ el('proList'); alert('Erro ao agendar: '+j.error); return; }
+      const ini=(sel.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      el('confAv').textContent=ini; el('confPro').textContent=sel.name||'Profissional';
+      el('confMsg').innerHTML=(sel.name||'O profissional')+' confirmado — pagamento em custódia (comissão da Chama embutida).';
+      go('confirm');
+    }catch(e){ alert('Erro: '+e.message); } finally { btn.disabled=false; }
+  }
+  document.addEventListener('click',function(e){
+    const sb=e.target.closest('#searchBtn'); if(sb){ search((el('need').value||'faxina').trim()); return; }
+    const ct=e.target.closest('[data-term]'); if(ct){ el('need').value=ct.dataset.term; search(ct.dataset.term); return; }
+    const bb=e.target.closest('.bookbtn'); if(bb){ pickPro(+bb.dataset.i); return; }
+    const cf=e.target.closest('#confirmBtn'); if(cf){ doBook(); return; }
+  });
+})();
 </script>
 </body>
 </html>
