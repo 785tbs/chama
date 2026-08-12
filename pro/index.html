@@ -228,26 +228,19 @@
   <section class="screen" data-screen="chamados">
     <div class="scroll hasnav">
       <div class="app-top"><div class="ttl">Chamados abertos<small>Aguardando orçamento</small></div></div>
-      <div class="card chm" data-go="orcamento"><div class="i"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Pintar a parede da sala</b><div>Pinheiros · há 5 min</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
-      <div class="card chm" data-go="orcamento" style="margin-top:12px"><div class="i"><svg><use href="#i-wrench"/></svg></div><div class="info"><b>Arrumar a pia da cozinha</b><div>Vila Madalena · há 22 min</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
-      <div class="card chm" data-go="orcamento" style="margin-top:12px"><div class="i"><svg><use href="#i-drop"/></svg></div><div class="info"><b>Limpar tapete manchado de vinho</b><div>Itaim · há 1 h</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
+      <div id="chamadoList"></div>
     </div>
   </section>
 
   <!-- MONTAR ORÇAMENTO -->
   <section class="screen" data-screen="orcamento">
     <div class="scroll">
-      <div class="app-top"><button class="iconbtn" data-go="chamados" aria-label="Voltar"><svg><use href="#i-back"/></svg></button><div class="ttl">Montar orçamento<small>Pintar a parede da sala</small></div></div>
+      <div class="app-top"><button class="iconbtn" data-go="chamados" aria-label="Voltar"><svg><use href="#i-back"/></svg></button><div class="ttl">Montar orçamento<small id="orcSub">Selecione um chamado</small></div></div>
       <div class="sec" style="margin-top:0"><span class="eyebrow">Mão de obra</span></div>
       <input id="labor" inputmode="numeric" placeholder="R$ 0,00" class="field" style="width:100%;border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface);font-size:15px;font-family:inherit;color:var(--ink)">
       <p class="muted" style="font-size:12px;margin:6px 2px 0">Você cobra só a mão de obra — os materiais vêm do marketplace pelo melhor preço.</p>
       <div class="sec"><span class="eyebrow">Materiais necessários</span></div>
-      <div class="card" style="padding:4px 16px" id="mats">
-        <div class="mrow" data-mat><div class="mi"><b>Tinta acrílica 18L</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
-        <div class="mrow" data-mat><div class="mi"><b>Rolo de pintura 23cm</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
-        <div class="mrow" data-mat><div class="mi"><b>Massa corrida 25kg</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
-        <div class="mrow" data-mat><div class="mi"><b>Fita crepe</b><div>un · pintura</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>
-      </div>
+      <div class="card" style="padding:4px 16px" id="mats"></div>
     </div>
     <div class="footbtn"><button class="btn btn-primary" id="sendQuote">Enviar orçamento</button></div>
   </section>
@@ -265,9 +258,55 @@
 <script>
   const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
   const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados'};
-  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
+  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;if(n==='chamados')loadChamados();}
   let toastT; function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';el.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1900);}
+
+  /* ---- backend real ---- */
+  const API='https://rceowmrunmxdwrnurfjv.supabase.co/functions/v1/api';
+  const REST='https://rceowmrunmxdwrnurfjv.supabase.co/rest/v1';
+  const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZW93bXJ1bm14ZHdybnVyZmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjQ3NjIsImV4cCI6MjEwMjA0MDc2Mn0.PPF6BHRCgY4QVuPrqqsbslFQCQNFjrf6-c00otA6rlQ';
+  const PRO='00000000-0000-0000-0000-0000000000a1'; /* Marcela (demo) */
+  const money=c=>'R$ '+(Number(c)/100).toFixed(2).replace('.',',');
+  async function api(action,body){const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});return r.json().catch(()=>({error:'resposta inválida'}));}
+  async function restGet(p){const r=await fetch(REST+p,{headers:{apikey:ANON,Authorization:'Bearer '+ANON}});return r.json().catch(()=>[]);}
+  const sel={};
+  async function loadChamados(){
+    const box=document.getElementById('chamadoList'); if(!box)return;
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Carregando chamados…</div>';
+    try{
+      const d=await api('list-chamados',{}); const list=d.chamados||[];
+      if(!list.length){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Nenhum chamado aberto agora.</div>';return;}
+      window.__chamados=list;
+      box.innerHTML=list.map((c,i)=>'<div class="card chm chamitem" '+(i?'style="margin-top:12px"':'')+' data-i="'+i+'"><div class="i"><svg><use href="#i-wrench"/></svg></div><div class="info"><b>'+(c.serviceName||'Serviço')+'</b><div>'+((c.neighborhood?c.neighborhood+' · ':'')+(c.rawText||''))+'</div></div><svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>').join('');
+    }catch(e){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Erro: '+e.message+'</div>';}
+  }
+  async function openOrcamento(i){
+    const c=(window.__chamados||[])[i]; if(!c)return;
+    sel.requestId=c.requestId; sel.svc=c.serviceName||'Serviço';
+    document.getElementById('orcSub').textContent=sel.svc;
+    document.getElementById('labor').value='';
+    go('orcamento');
+    const box=document.getElementById('mats'); box.innerHTML='<div style="padding:12px;color:var(--ink3);font-size:13px">Carregando materiais…</div>';
+    const mats=await restGet('/materials?select=id,name,unit,category&order=category');
+    box.innerHTML=(mats||[]).map(m=>'<div class="mrow" data-mid="'+m.id+'"><div class="mi"><b>'+m.name+'</b><div>'+(m.unit||'un')+(m.category?' · '+m.category:'')+'</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>').join('');
+  }
+  async function sendQuote(){
+    if(!sel.requestId){toast('Abra um chamado primeiro');go('chamados');return;}
+    const raw=(document.getElementById('labor').value||'').replace(/[^0-9,\.]/g,'').replace(/\./g,'').replace(',','.');
+    const laborCents=Math.round((parseFloat(raw)||0)*100);
+    if(laborCents<=0){toast('Informe a mão de obra');return;}
+    const materials=[...document.querySelectorAll('#mats .mrow')].map(r=>({materialId:r.dataset.mid,qty:+r.querySelector('[data-q]').textContent})).filter(x=>x.qty>0);
+    const btn=document.getElementById('sendQuote'); btn.disabled=true;
+    try{
+      const j=await api('build-quote',{requestId:sel.requestId,proId:PRO,laborCents,materials});
+      if(j.error){toast('Erro: '+j.error);return;}
+      toast('Orçamento enviado · total '+money(j.pricing.totalCents));
+      setTimeout(()=>go('chamados'),1000);
+    }finally{btn.disabled=false;}
+  }
+
   document.addEventListener('click',e=>{
+    const ch=e.target.closest('.chamitem'); if(ch){openOrcamento(+ch.dataset.i);return;}
     const g=e.target.closest('[data-go]'); if(g){e.preventDefault();go(g.dataset.go);return;}
     const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);return;}
     const av=e.target.closest('#avail'); if(av){av.classList.toggle('on');toast(av.classList.contains('on')?'Você está disponível':'Você ficou indisponível');return;}
@@ -279,7 +318,7 @@
     const dec=e.target.closest('[data-dec]'); if(dec){const q=dec.closest('.mrow').querySelector('[data-q]');q.textContent=Math.max(0,+q.textContent-1);return;}
   });
   let cart=0;
-  document.getElementById('sendQuote').addEventListener('click',()=>{const n=[...document.querySelectorAll('#mats [data-q]')].reduce((s,q)=>s+ +q.textContent,0);toast('Orçamento enviado ao cliente'+(n?` · ${n} materiais`:''));setTimeout(()=>go('chamados'),700);});
+  document.getElementById('sendQuote').addEventListener('click',sendQuote);
 </script>
 </body>
 </html>
