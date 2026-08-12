@@ -49,7 +49,7 @@
     <div class="scroll hasnav">
       <div class="greet">
         <div class="brandmark"><span class="mk"><svg><use href="#i-flame"/></svg></span><span class="wm">Cha<b>ma</b></span></div>
-        <div class="avatar" data-go="perfil">AB</div>
+        <div class="avatar" id="meAvatar" data-go="perfil">AB</div>
       </div>
       <h1 class="h1">O que você precisa<br>resolver hoje?</h1>
       <div class="search">
@@ -58,8 +58,9 @@
         </label>
         <div class="cta">
           <button class="btn btn-primary" id="searchBtn">Buscar profissional</button>
-          <button class="btn btn-ghost btn-ico" aria-label="Falar"><svg style="width:20px;height:20px"><use href="#i-mic"/></svg></button>
+          <button class="btn btn-ghost btn-ico" id="micBtn" aria-label="Falar"><svg style="width:20px;height:20px"><use href="#i-mic"/></svg></button>
         </div>
+        <button class="btn btn-ghost btn-sm" id="quoteBtn" style="width:100%;margin-top:9px;justify-content:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-scale"/></svg> Pedir orçamento (mão de obra + materiais)</button>
       </div>
       <div class="sec"><span class="eyebrow">Categorias</span></div>
       <div class="cats">
@@ -70,16 +71,8 @@
         <div class="cat" data-term="manicure cabelo"><div class="i"><svg><use href="#i-sciss"/></svg></div><div class="l">Beleza</div></div>
         <div class="cat" data-term="montar móvel"><div class="i"><svg><use href="#i-box"/></svg></div><div class="l">Montagem</div></div>
       </div>
-      <div class="sec"><span class="eyebrow">Seu próximo serviço</span></div>
-      <div class="card upnext" data-go="agenda">
-        <div class="eyebrow">Amanhã · 09:00</div>
-        <div class="when">Faxina · apartamento</div>
-        <div class="who">Marcela A. · profissional verificada</div>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <span class="chip gw"><svg><use href="#i-shield"/></svg> Pagamento em custódia</span>
-          <span class="chip gw"><svg><use href="#i-pin"/></svg> 1,2 km</span>
-        </div>
-      </div>
+      <div class="sec" id="upnextSec" style="display:none"><span class="eyebrow">Seu próximo serviço</span></div>
+      <div class="card upnext" id="upnextCard" data-go="agenda" style="display:none"></div>
     </div>
   </section>
 
@@ -183,19 +176,8 @@
   <section class="screen" data-screen="agenda">
     <div class="scroll hasnav">
       <h1 class="h1" style="font-size:24px">Sua agenda</h1>
-      <div class="seg"><button class="on">Próximos</button><button>Concluídos</button></div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">Terça, 12 ago</span><span class="status sched">Agendado</span></div>
-        <div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-broom"/></svg></div>
-          <div class="info"><b>Faxina · Marcela A.</b><div>09:00 · R$ 150,00 · em custódia</div></div>
-          <svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">Quinta, 14 ago</span><span class="status way">A caminho</span></div>
-        <div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-bolt"/></svg></div>
-          <div class="info"><b>Elétrica · Pedro L.</b><div>14:00 · R$ 220,00 · NR-10</div></div>
-          <svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div>
-      </div>
+      <div class="seg" id="agdSeg"><button class="on" data-filter="upcoming">Próximos</button><button data-filter="done">Concluídos</button></div>
+      <div id="agdList"></div>
       <div class="sec"><span class="eyebrow">Recorrência</span></div>
       <div class="card bk" id="fixarBtn" style="cursor:pointer">
         <div class="i" style="background:var(--line2)"><svg style="color:var(--ink)"><use href="#i-scale"/></svg></div>
@@ -210,8 +192,8 @@
     <div class="scroll hasnav">
       <h1 class="h1" style="font-size:24px">Perfil</h1>
       <div class="card" style="display:flex;gap:14px;align-items:center;margin-top:10px">
-        <div class="avatar lg">AB</div>
-        <div style="flex:1"><b style="font-size:16px;letter-spacing:-.02em">Ana Beatriz</b><div class="muted" style="font-size:12.5px">ana@email.com</div></div>
+        <div class="avatar lg" id="meAvatar2">AB</div>
+        <div style="flex:1"><b style="font-size:16px;letter-spacing:-.02em" id="meName">Visitante</b><div class="muted" style="font-size:12.5px" id="meEmail">entre na sua conta</div></div>
         <span class="chip ok"><svg><use href="#i-check"/></svg> Verificado</span>
       </div>
       <div class="sec"><span class="eyebrow">Conheça o resto da Chama</span></div>
@@ -227,9 +209,47 @@
       </a>
       <div class="sec"><span class="eyebrow">Conta</span></div>
       <div class="listrow" data-go="home"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-home"/></svg></div><div class="t"><b>Voltar ao início</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
+      <div class="listrow" id="logoutBtn" style="cursor:pointer"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-back"/></svg></div><div class="t"><b>Sair da conta</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <p style="text-align:center;color:var(--ink3);font-size:11.5px;margin-top:22px">Protótipo navegável da Chama · demonstração</p>
     </div>
   </section>
+
+  <!-- ORÇAMENTOS (lista) -->
+  <section class="screen" data-screen="orcamentos">
+    <div class="scroll hasnav">
+      <h1 class="h1" style="font-size:24px">Meus orçamentos</h1>
+      <p class="muted" style="font-size:13px;margin:-6px 2px 14px">O profissional cobra só a <b>mão de obra</b>. Os <b>materiais</b> são cotados pela Chama no menor preço — sem cobrança extra.</p>
+      <div id="quoteList"></div>
+    </div>
+  </section>
+
+  <!-- ORÇAMENTO (detalhe) -->
+  <section class="screen" data-screen="quote">
+    <div class="scroll">
+      <div class="app-top">
+        <button class="iconbtn" data-go="orcamentos" aria-label="Voltar"><svg><use href="#i-back"/></svg></button>
+        <div class="ttl">Orçamento<small id="qSub">—</small></div>
+      </div>
+      <div id="quoteDetail"></div>
+    </div>
+    <div class="footbtn"><button class="btn btn-primary" id="acceptQuoteBtn"><svg style="width:18px;height:18px"><use href="#i-check"/></svg> <span id="acceptLabel">Aceitar e agendar</span></button></div>
+  </section>
+
+  <!-- AUTH (login / cadastro) -->
+  <div id="auth" style="position:fixed;inset:0;z-index:60;background:#fff;display:none;flex-direction:column;justify-content:center;padding:28px 22px">
+    <div style="max-width:400px;width:100%;margin:0 auto">
+      <div class="brandmark" style="justify-content:center;margin-bottom:10px"><span class="mk"><svg><use href="#i-flame"/></svg></span><span class="wm">Cha<b>ma</b></span></div>
+      <h1 class="h1" id="authTitle" style="text-align:center;font-size:26px">Entrar</h1>
+      <p class="muted" id="authSub" style="text-align:center;font-size:13px;margin:-4px 0 18px">Acesse sua conta para agendar e acompanhar seus serviços.</p>
+      <div class="search" id="authNameField" style="margin:0 0 10px;display:none"><label class="field"><svg><use href="#i-user"/></svg><input id="authName" placeholder="Seu nome"></label></div>
+      <div class="search" style="margin:0 0 10px"><label class="field"><svg><use href="#i-user"/></svg><input id="authEmail" type="email" placeholder="E-mail" autocomplete="email"></label></div>
+      <div class="search" style="margin:0 0 14px"><label class="field"><svg><use href="#i-shield"/></svg><input id="authPass" type="password" placeholder="Senha" autocomplete="current-password"></label></div>
+      <button class="btn btn-primary" id="authSubmit" style="width:100%">Entrar</button>
+      <div id="authErr" style="color:#d33;font-size:12.5px;text-align:center;margin-top:10px;min-height:16px"></div>
+      <button class="btn btn-ghost btn-sm" id="authToggle" style="width:100%;margin-top:4px">Não tem conta? Criar conta</button>
+      <button class="btn btn-ghost btn-sm" id="authDemo" style="width:100%;margin-top:8px;color:var(--ink2)">Entrar com conta demo</button>
+    </div>
+  </div>
 
   <!-- FORMALIZAÇÃO (sheet) -->
   <div class="sheetwrap" id="sheet">
@@ -248,6 +268,7 @@
   <nav class="tabbar" id="nav">
     <button data-go="home" data-tab="home"><svg><use href="#i-home"/></svg>Início</button>
     <button data-go="results" data-tab="results"><svg><use href="#i-search"/></svg>Buscar</button>
+    <button data-go="orcamentos" data-tab="orcamentos"><svg><use href="#i-scale"/></svg>Orçam.</button>
     <button data-go="agenda" data-tab="agenda"><svg><use href="#i-cal"/></svg>Agenda</button>
     <button data-go="perfil" data-tab="perfil"><svg><use href="#i-user"/></svg>Perfil</button>
   </nav>
@@ -257,8 +278,8 @@
   const screens = [...document.querySelectorAll('.screen')];
   const nav = document.getElementById('nav');
   const navBtns = [...nav.querySelectorAll('button')];
-  const withNav = ['home','results','agenda','perfil'];
-  const tabFor = { home:'home', results:'results', book:'results', confirm:'results', agenda:'agenda', perfil:'perfil' };
+  const withNav = ['home','results','orcamentos','agenda','perfil'];
+  const tabFor = { home:'home', results:'results', book:'results', confirm:'results', orcamentos:'orcamentos', quote:'orcamentos', agenda:'agenda', perfil:'perfil' };
   function go(name){
     const s = screens.find(x=>x.dataset.screen===name); if(!s) return;
     screens.forEach(x=>x.classList.toggle('active', x===s));
@@ -287,24 +308,83 @@
 <script>
 /* ---- Integração com o backend real (Supabase na nuvem) ---- */
 (function(){
-  const API='https://rceowmrunmxdwrnurfjv.supabase.co/functions/v1/api';
+  const BASE='https://rceowmrunmxdwrnurfjv.supabase.co';
+  const API=BASE+'/functions/v1/api', AUTHURL=BASE+'/auth/v1';
   const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZW93bXJ1bm14ZHdybnVyZmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjQ3NjIsImV4cCI6MjEwMjA0MDc2Mn0.PPF6BHRCgY4QVuPrqqsbslFQCQNFjrf6-c00otA6rlQ';
-  const CUSTOMER='3333c3cf-d602-4631-9e6e-c09c6a306dbc';
   const el=id=>document.getElementById(id);
-  const money=c=>'R$ '+(Number(c)/100).toFixed(2).replace('.',',');
+  const money=c=>'R$ '+(Number(c||0)/100).toFixed(2).replace('.',',');
+  const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const SKEY='chama_customer_session';
+  let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
+
   async function api(action,body){
     const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
     return {status:r.status, j:await r.json().catch(()=>({error:'resposta inválida'}))};
   }
+  async function gotrue(path,body){
+    const r=await fetch(AUTHURL+path,{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify(body)});
+    return {status:r.status, j:await r.json().catch(()=>({}))};
+  }
+
+  /* ---------- AUTH ---------- */
+  let authMode='login';
+  const showAuth=()=>{ el('auth').style.display='flex'; };
+  const hideAuth=()=>{ el('auth').style.display='none'; };
+  function setAuthMode(m){
+    authMode=m;
+    el('authNameField').style.display = m==='signup'?'':'none';
+    el('authTitle').textContent = m==='signup'?'Criar conta':'Entrar';
+    el('authSub').textContent = m==='signup'?'Crie sua conta de cliente em segundos.':'Acesse sua conta para agendar e acompanhar seus serviços.';
+    el('authSubmit').textContent = m==='signup'?'Criar conta':'Entrar';
+    el('authToggle').textContent = m==='signup'?'Já tem conta? Entrar':'Não tem conta? Criar conta';
+    el('authErr').textContent='';
+  }
+  function saveSession(user){
+    me={ id:user.id, email:user.email, name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0] };
+    localStorage.setItem(SKEY, JSON.stringify(me));
+  }
+  async function login(email,pass){
+    const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});
+    if(status>=400||!j.access_token) throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');
+    saveSession(j.user);
+  }
+  async function doAuth(){
+    const email=(el('authEmail').value||'').trim().toLowerCase();
+    const pass=el('authPass').value||'';
+    const name=(el('authName').value||'').trim();
+    el('authErr').textContent='';
+    if(!email||pass.length<6){ el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).'; return; }
+    const btn=el('authSubmit'); btn.disabled=true; const old=btn.textContent; btn.textContent='…';
+    try{
+      if(authMode==='signup'){
+        const {status,j}=await api('signup',{email,password:pass,role:'customer',fullName:name});
+        if(status>=400 && j.code!=='email_taken') throw new Error(j.error||'falha ao criar conta');
+      }
+      await login(email,pass);
+      hideAuth(); enter();
+    }catch(e){ el('authErr').textContent=e.message; }
+    finally{ btn.disabled=false; btn.textContent=old; }
+  }
+  function logout(){ localStorage.removeItem(SKEY); me=null; window.__bookings=[]; window.__quotes=[]; setAuthMode('login'); showAuth(); }
+
+  function paintMe(){
+    if(!me) return;
+    el('meAvatar').textContent=initials(me.name);
+    el('meAvatar2').textContent=initials(me.name);
+    el('meName').textContent=me.name;
+    el('meEmail').textContent=me.email;
+  }
+
+  /* ---------- BUSCA / AGENDAMENTO DIRETO ---------- */
   const sel={};
   function renderPros(m){
     sel.serviceId=m.serviceId; sel.serviceName=m.serviceName||'Serviço'; sel.basePrice=m.basePriceCents||15000;
     el('resTitle').innerHTML=(m.serviceName||'Profissionais')+'<small>Pinheiros · São Paulo</small>';
     el('resCount').innerHTML='<b style="color:var(--ink)">'+m.count+'</b> profissional(is) verificado(s)';
     window.__pros=m.pros||[];
-    if(!m.pros||!m.pros.length){ el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Nenhum profissional disponível para isso ainda.</div>'; return; }
+    if(!m.pros||!m.pros.length){ el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Nenhum profissional para isso ainda.<br><span style="font-size:12.5px">Tente “Pedir orçamento” na tela inicial.</span></div>'; return; }
     el('proList').innerHTML=m.pros.map(function(p,i){
-      const nm=p.name||'Profissional', ini=nm.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(), best=i===0;
+      const nm=p.name||'Profissional', ini=initials(nm), best=i===0;
       return '<div class="pro'+(best?' best':'')+'">'+(best?'<span class="best-tag"><svg><use href="#i-flame"/></svg> Melhor match</span>':'')+
         '<div class="pro-top"><div class="avatar lg'+(best?' flame':'')+'">'+ini+'</div>'+
         '<div class="pro-id"><div class="pro-name">'+nm+' <svg><use href="#i-shield"/></svg></div>'+
@@ -315,10 +395,11 @@
     }).join('');
   }
   async function search(term){
+    if(!me){ showAuth(); return; }
     el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Buscando profissionais…</div>';
     go('results');
     try{
-      const {j:intk}=await api('intake',{customerId:CUSTOMER,rawText:term});
+      const {j:intk}=await api('intake',{customerId:me.id,rawText:term});
       if(!intk.requestId) throw new Error(intk.error||'falha no intake');
       sel.requestId=intk.requestId;
       const {j:m}=await api('match',{requestId:intk.requestId});
@@ -345,21 +426,154 @@
     if(!sel.proId){ go('home'); return; }
     const btn=el('confirmBtn'); btn.disabled=true;
     try{
-      const {j}=await api('create-booking',{customerId:CUSTOMER,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId});
-      if(j.needsFormalization){ document.getElementById('sheet').classList.add('open'); return; }
-      if(j.error){ el('proList'); alert('Erro ao agendar: '+j.error); return; }
-      const ini=(sel.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-      el('confAv').textContent=ini; el('confPro').textContent=sel.name||'Profissional';
+      const {j}=await api('create-booking',{customerId:me.id,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId});
+      if(j.needsFormalization){ el('sheet').classList.add('open'); return; }
+      if(j.error){ alert('Erro ao agendar: '+j.error); return; }
+      el('confAv').textContent=initials(sel.name); el('confPro').textContent=sel.name||'Profissional';
       el('confMsg').innerHTML=(sel.name||'O profissional')+' confirmado — pagamento em custódia (comissão da Chama embutida).';
       go('confirm');
     }catch(e){ alert('Erro: '+e.message); } finally { btn.disabled=false; }
   }
+  async function openChamado(term){
+    if(!me){ showAuth(); return; }
+    const t=(term||'').trim(); if(!t){ el('need').focus(); return; }
+    try{
+      const {j}=await api('intake',{customerId:me.id,rawText:t,needsQuote:true});
+      if(!j.requestId) throw new Error(j.error||'falha ao abrir chamado');
+      el('need').value='';
+      alert('Chamado aberto! Os profissionais vão te enviar orçamentos — acompanhe em “Orçam.”.');
+      go('orcamentos');
+    }catch(e){ alert('Erro: '+e.message); }
+  }
+
+  /* ---------- ORÇAMENTOS ---------- */
+  async function loadQuotes(){
+    if(!me) return;
+    const box=el('quoteList'); box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Carregando…</div>';
+    try{
+      const {j}=await api('list-my-quotes',{customerId:me.id});
+      const qs=j.quotes||[]; window.__quotes=qs;
+      if(!qs.length){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Você ainda não recebeu orçamentos.<br><span style="font-size:12.5px">Abra um chamado na tela inicial.</span></div>'; return; }
+      box.innerHTML=qs.map(function(q,i){
+        const st=q.status==='accepted'?'<span class="status sched">Aceito</span>':'<span class="status way">Novo</span>';
+        return '<div class="card qitem" data-qi="'+i+'" style="'+(i?'margin-top:12px;':'')+'cursor:pointer">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">'+q.proName+'</span>'+st+'</div>'+
+          '<div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-wrench"/></svg></div>'+
+          '<div class="info"><b>'+q.serviceName+'</b><div>Mão de obra '+money(q.laborCents)+' · Total '+money(q.totalCents)+'</div></div>'+
+          '<svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg></div></div>';
+      }).join('');
+    }catch(e){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Erro: '+e.message+'</div>'; }
+  }
+  const cur={};
+  async function openQuote(i){
+    const q=(window.__quotes||[])[i]; if(!q) return;
+    cur.quoteId=q.quoteId; cur.status=q.status;
+    el('qSub').textContent=q.serviceName+' · '+q.proName;
+    el('quoteDetail').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Carregando…</div>';
+    go('quote');
+    await renderQuote();
+  }
+  async function renderQuote(){
+    const {j}=await api('get-quote',{quoteId:cur.quoteId});
+    if(j.error){ el('quoteDetail').innerHTML='<div class="card">Erro: '+j.error+'</div>'; return; }
+    cur.status=j.quote.status;
+    const mats=j.materials||[];
+    const matHtml = mats.length ? mats.map(function(m){
+      const alts=(m.alternatives||[]).filter(a=>a.offerId!==m.chosenOfferId);
+      const altHtml = alts.length ? '<div class="qalts" data-qm="'+m.quoteMaterialId+'" style="display:none;margin-top:6px;border-top:1px solid var(--line);padding-top:4px">'+
+        alts.map(a=>'<div class="qalt" data-qm="'+m.quoteMaterialId+'" data-off="'+a.offerId+'" style="display:flex;justify-content:space-between;padding:8px 0;cursor:pointer"><span class="muted">'+(a.supplier||'Fornecedor')+'</span><b style="font-size:13px">'+money(a.unitCents)+'/un</b></div>').join('')+'</div>' : '';
+      const swap = (alts.length && cur.status!=='accepted') ? '<button class="btn btn-ghost btn-sm swapBtn" data-qm="'+m.quoteMaterialId+'" style="margin-top:4px;padding:6px 12px">Trocar fornecedor ('+alts.length+')</button>' : '';
+      return '<div class="kv"><span class="muted">'+(m.name||'Material')+' ×'+m.qty+'</span><span class="v">'+money(m.totalCents)+'</span></div>'+swap+altHtml;
+    }).join('') : '<div class="muted" style="font-size:13px;padding:2px 0">Sem materiais — só mão de obra.</div>';
+    el('quoteDetail').innerHTML=
+      '<div class="card">'+
+        '<div class="kv"><span class="muted">Mão de obra (profissional)</span><span class="v">'+money(j.quote.laborCents)+'</span></div>'+
+        (mats.length?'<div class="sec" style="margin:12px 0 2px"><span class="eyebrow">Materiais · cotados pela Chama</span></div>':'')+
+        matHtml+
+        (j.quote.marginCents?'<div class="kv"><span class="muted">Taxa de materiais</span><span class="v">'+money(j.quote.marginCents)+'</span></div>':'')+
+        '<div class="kv tot"><span>Total</span><span class="v">'+money(j.quote.totalCents)+'</span></div>'+
+        '<div class="escrow"><svg><use href="#i-shield"/></svg><span><b>Anti-markup:</b> o profissional cobra só a <b>mão de obra</b>. Materiais no <b>menor preço</b> — troque o fornecedor se quiser.</span></div>'+
+      '</div>';
+    const accepted = cur.status==='accepted';
+    el('acceptLabel').textContent = accepted?'Orçamento já aceito ✓':'Aceitar e agendar · '+money(j.quote.totalCents);
+    el('acceptQuoteBtn').disabled = accepted;
+  }
+  async function swap(qm,off){ await api('swap-offer',{quoteMaterialId:qm,offerId:off}); await renderQuote(); }
+  async function acceptQuote(){
+    if(!cur.quoteId||cur.status==='accepted') return;
+    const btn=el('acceptQuoteBtn'); btn.disabled=true;
+    try{
+      const {j}=await api('accept-quote',{quoteId:cur.quoteId,customerId:me.id,scheduledAt:null});
+      if(j.error){ alert('Erro: '+j.error); btn.disabled=false; return; }
+      alert('Orçamento aceito! O serviço está na sua agenda.');
+      go('agenda');
+    }catch(e){ alert('Erro: '+e.message); btn.disabled=false; }
+  }
+
+  /* ---------- AGENDA ---------- */
+  let agdFilter='upcoming';
+  const UPCOMING=['requested','quoted','accepted','scheduled','in_progress'];
+  const ST={requested:['Solicitado','way'],quoted:['Orçado','way'],accepted:['Aceito','sched'],scheduled:['Agendado','sched'],in_progress:['Em andamento','way'],completed:['Concluído','done'],cancelled:['Cancelado','done']};
+  const stLabel=s=>(ST[s]||[s])[0];
+  const stTag=s=>{ const m=ST[s]||[s,'sched']; return '<span class="status '+m[1]+'">'+m[0]+'</span>'; };
+  function fmtDate(iso){ if(!iso) return 'A combinar'; const d=new Date(iso); return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+  async function loadAgenda(){
+    if(!me) return;
+    const box=el('agdList'); box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Carregando…</div>';
+    try{
+      const {j}=await api('list-bookings',{role:'customer',profileId:me.id});
+      window.__bookings=j.bookings||[]; renderAgenda(); paintNext();
+    }catch(e){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Erro: '+e.message+'</div>'; }
+  }
+  function renderAgenda(){
+    const box=el('agdList');
+    const list=(window.__bookings||[]).filter(b=> agdFilter==='done' ? b.status==='completed' : UPCOMING.includes(b.status));
+    if(!list.length){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Nada por aqui ainda.</div>'; return; }
+    box.innerHTML=list.map(function(b){
+      return '<div class="card" style="margin-bottom:12px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">'+fmtDate(b.scheduledAt)+'</span>'+stTag(b.status)+'</div>'+
+        '<div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-wrench"/></svg></div>'+
+        '<div class="info"><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div>'+money(b.priceCents)+' · em custódia</div></div></div></div>';
+    }).join('');
+  }
+  function paintNext(){
+    const up=(window.__bookings||[]).filter(b=>UPCOMING.includes(b.status));
+    if(!up.length){ el('upnextSec').style.display='none'; el('upnextCard').style.display='none'; return; }
+    const b=up[0];
+    el('upnextSec').style.display=''; el('upnextCard').style.display='';
+    el('upnextCard').innerHTML='<div class="eyebrow">'+fmtDate(b.scheduledAt)+'</div><div class="when">'+b.serviceName+'</div><div class="who">'+b.counterpartyName+'</div>'+
+      '<div style="margin-top:12px;display:flex;gap:8px"><span class="chip gw"><svg><use href="#i-shield"/></svg> Em custódia</span><span class="chip gw">'+stLabel(b.status)+'</span></div>';
+  }
+
+  /* ---------- navegação com carga de dados ---------- */
+  const _go=window.go;
+  window.go=function(n){ _go(n); if(!me) return; if(n==='agenda') loadAgenda(); else if(n==='orcamentos') loadQuotes(); else if(n==='home') paintNext(); };
+
+  /* ---------- eventos ---------- */
   document.addEventListener('click',function(e){
     const sb=e.target.closest('#searchBtn'); if(sb){ search((el('need').value||'faxina').trim()); return; }
+    const qb=e.target.closest('#quoteBtn'); if(qb){ openChamado(el('need').value); return; }
+    const mb=e.target.closest('#micBtn'); if(mb){ el('need').focus(); return; }
     const ct=e.target.closest('[data-term]'); if(ct){ el('need').value=ct.dataset.term; search(ct.dataset.term); return; }
     const bb=e.target.closest('.bookbtn'); if(bb){ pickPro(+bb.dataset.i); return; }
     const cf=e.target.closest('#confirmBtn'); if(cf){ doBook(); return; }
+    const qi=e.target.closest('.qitem'); if(qi){ openQuote(+qi.dataset.qi); return; }
+    const sw=e.target.closest('.swapBtn'); if(sw){ const box=document.querySelector('.qalts[data-qm="'+sw.dataset.qm+'"]'); if(box) box.style.display = box.style.display==='none'?'block':'none'; return; }
+    const qa=e.target.closest('.qalt'); if(qa){ swap(qa.dataset.qm, qa.dataset.off); return; }
+    const aq=e.target.closest('#acceptQuoteBtn'); if(aq){ acceptQuote(); return; }
+    const lo=e.target.closest('#logoutBtn'); if(lo){ logout(); return; }
   });
+  el('agdSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; [...el('agdSeg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); agdFilter=b.dataset.filter; renderAgenda(); });
+  el('authSubmit').addEventListener('click',doAuth);
+  el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
+  el('authDemo').addEventListener('click',()=>{ el('authEmail').value='cliente.demo@chama.app'; el('authPass').value='chama2026'; setAuthMode('login'); doAuth(); });
+  el('authPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
+
+  function enter(){ paintMe(); loadAgenda(); _go('home'); }
+
+  /* ---------- init ---------- */
+  setAuthMode('login');
+  if(me){ enter(); } else { showAuth(); }
 })();
 </script>
 </body>

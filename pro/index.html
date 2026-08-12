@@ -110,25 +110,21 @@
   <section class="screen active" data-screen="painel">
     <div class="scroll hasnav">
       <div class="greet">
-        <div style="display:flex;align-items:center;gap:11px"><div class="avatar flame">MA</div>
-          <div><div class="eyebrow">Bom dia</div><div style="font-weight:800;letter-spacing:-.02em">Marcela A.</div></div></div>
+        <div style="display:flex;align-items:center;gap:11px"><div class="avatar flame" id="proAvatar">MA</div>
+          <div><div class="eyebrow">Bom dia</div><div style="font-weight:800;letter-spacing:-.02em" id="proName">Profissional</div></div></div>
         <button class="avail on" id="avail"><span>Disponível</span><span class="knob"></span></button>
       </div>
       <div class="card dark" style="margin-top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">Ganhos da semana</span><span class="delta"><svg><use href="#i-trend"/></svg> +18%</span></div>
-        <div class="big">R$ 1.240,00</div>
+        <div class="big" id="earnWeek">R$ 0,00</div>
         <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.4)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
           <path d="M0,56 L50,48 L100,52 L150,32 L200,38 L250,20 L300,10 L300,70 L0,70 Z" fill="url(#g1)"/>
           <path d="M0,56 L50,48 L100,52 L150,32 L200,38 L250,20 L300,10" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="300" cy="10" r="4" fill="var(--flame)"/></svg>
-        <div class="split"><div class="b"><div class="k">Disponível p/ saque</div><div class="v">R$ 940,00</div></div><div class="b"><div class="k">Em custódia</div><div class="v">R$ 300,00</div></div></div>
+        <div class="split"><div class="b"><div class="k">Recebido (líquido)</div><div class="v" id="earnAvail">R$ 0,00</div></div><div class="b"><div class="k">Em custódia</div><div class="v" id="earnEscrow">R$ 0,00</div></div></div>
         <button class="btn btn-white btn-sm" style="margin-top:12px" data-go="financas"><svg style="width:17px;height:17px"><use href="#i-wallet"/></svg> Ver finanças</button>
       </div>
-      <div class="sec"><span class="eyebrow">Novas solicitações</span></div>
-      <div class="req" id="req1">
-        <div class="t"><div class="avatar">AB</div><div><b>Faxina · Ana B.</b><div style="color:var(--ink2);font-size:12.5px;margin-top:2px">Amanhã 09:00 · Pinheiros · 1,2 km</div></div>
-          <div class="price"><b>R$ 150</b><div>líq. R$ 127,50</div></div></div>
-        <div class="act"><button class="btn btn-primary btn-sm" style="flex:1" data-accept>Aceitar</button><button class="btn btn-ghost btn-sm" style="flex:1" data-decline>Recusar</button></div>
-      </div>
+      <div class="sec"><span class="eyebrow">Seus próximos serviços</span></div>
+      <div id="jobList"></div>
       <p class="muted" style="font-size:11.5px;margin:8px 2px 0">Você escolhe o que aceitar, seus preços e horários — sem exclusividade.</p>
       <div class="sec"><span class="eyebrow">Atalhos</span></div>
       <div class="quick">
@@ -150,8 +146,8 @@
         <div class="play"><svg><use href="#i-play"/></svg></div><div class="dur">0:48</div>
         <div class="cap"><b>Marcela conta o que faz melhor</b><div>Toque para assistir</div></div>
       </div>
-      <div style="display:flex;gap:12px;align-items:center;margin-top:16px"><div class="avatar lg flame">MA</div>
-        <div style="flex:1"><div style="font-weight:800;letter-spacing:-.02em;font-size:17px;display:flex;align-items:center;gap:6px">Marcela Almeida <svg style="width:16px;height:16px;color:var(--ok)"><use href="#i-shield"/></svg></div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:16px"><div class="avatar lg flame" id="proAvatar2">MA</div>
+        <div style="flex:1"><div style="font-weight:800;letter-spacing:-.02em;font-size:17px;display:flex;align-items:center;gap:6px"><span id="proName2">Marcela Almeida</span> <svg style="width:16px;height:16px;color:var(--ok)"><use href="#i-shield"/></svg></div>
           <div class="muted" style="font-size:12.5px">Diarista • Personal organizer · Pinheiros</div></div></div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px"><span class="chip ok"><svg><use href="#i-check"/></svg> Identidade</span><span class="chip ok"><svg><use href="#i-check"/></svg> Antecedentes</span><span class="chip"><svg><use href="#i-clock"/></svg> Responde em ~10 min</span></div>
       <div class="sec"><span class="eyebrow">Serviços que ofereço</span></div>
@@ -174,6 +170,8 @@
         <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">AB</div><b style="font-size:13.5px">Ana B.</b><span class="st">★★★★★</span></div><p>“Deixou o apê impecável e foi super pontual. Já reagendei!”</p><div class="sv">Faxina · há 3 dias</div></div>
         <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">RM</div><b style="font-size:13.5px">Rui M.</b><span class="st">★★★★★</span></div><p>“Organizou o closet inteiro com muito capricho.”</p><div class="sv">Organização · há 1 semana</div></div>
       </div>
+      <div class="sec"><span class="eyebrow">Conta</span></div>
+      <div class="listrow" id="logoutBtn" style="cursor:pointer"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-back"/></svg></div><div class="t"><b>Sair da conta</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
     </div>
   </section>
 
@@ -245,6 +243,22 @@
     <div class="footbtn"><button class="btn btn-primary" id="sendQuote">Enviar orçamento</button></div>
   </section>
 
+  <!-- AUTH (login / cadastro do profissional) -->
+  <div id="auth" style="position:fixed;inset:0;z-index:60;background:#fff;display:none;flex-direction:column;justify-content:center;padding:28px 22px">
+    <div style="max-width:400px;width:100%;margin:0 auto">
+      <div class="brandmark" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px"><span class="mk" style="width:34px;height:34px;border-radius:10px;background:var(--flame);color:#fff;display:grid;place-items:center"><svg style="width:20px;height:20px"><use href="#i-flame"/></svg></span><b style="font-size:19px;letter-spacing:-.02em">Chama <span style="color:var(--flame600)">Pro</span></b></div>
+      <h1 class="h1" id="authTitle" style="text-align:center;font-size:26px">Entrar</h1>
+      <p class="muted" id="authSub" style="text-align:center;font-size:13px;margin:-4px 0 18px">Acesse sua conta de profissional.</p>
+      <div class="search" id="authNameField" style="margin:0 0 10px;display:none"><label class="field"><svg><use href="#i-user"/></svg><input id="authName" placeholder="Seu nome"></label></div>
+      <div class="search" style="margin:0 0 10px"><label class="field"><svg><use href="#i-user"/></svg><input id="authEmail" type="email" placeholder="E-mail" autocomplete="email"></label></div>
+      <div class="search" style="margin:0 0 14px"><label class="field"><svg><use href="#i-shield"/></svg><input id="authPass" type="password" placeholder="Senha" autocomplete="current-password"></label></div>
+      <button class="btn btn-primary" id="authSubmit" style="width:100%">Entrar</button>
+      <div id="authErr" style="color:#d33;font-size:12.5px;text-align:center;margin-top:10px;min-height:16px"></div>
+      <button class="btn btn-ghost btn-sm" id="authToggle" style="width:100%;margin-top:4px">Não tem conta? Criar conta</button>
+      <button class="btn btn-ghost btn-sm" id="authDemo" style="width:100%;margin-top:8px;color:var(--ink2)">Entrar com conta demo</button>
+    </div>
+  </div>
+
   <nav class="tabbar" id="nav">
     <button data-go="painel" data-tab="painel"><svg><use href="#i-home"/></svg>Painel</button>
     <button data-go="chamados" data-tab="chamados"><svg><use href="#i-wrench"/></svg>Chamados</button>
@@ -258,20 +272,40 @@
 <script>
   const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
   const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados'};
-  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;if(n==='chamados')loadChamados();}
-  let toastT; function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';el.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1900);}
+  const el=id=>document.getElementById(id);
+  function _go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
+  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); }
+  let toastT; function toast(m){const e=el('toast');e.textContent=m;e.style.opacity='1';e.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(10px)';},1900);}
 
   /* ---- backend real ---- */
-  const API='https://rceowmrunmxdwrnurfjv.supabase.co/functions/v1/api';
-  const REST='https://rceowmrunmxdwrnurfjv.supabase.co/rest/v1';
+  const BASE='https://rceowmrunmxdwrnurfjv.supabase.co';
+  const API=BASE+'/functions/v1/api', REST=BASE+'/rest/v1', AUTHURL=BASE+'/auth/v1';
   const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZW93bXJ1bm14ZHdybnVyZmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjQ3NjIsImV4cCI6MjEwMjA0MDc2Mn0.PPF6BHRCgY4QVuPrqqsbslFQCQNFjrf6-c00otA6rlQ';
-  const PRO='00000000-0000-0000-0000-0000000000a1'; /* Marcela (demo) */
-  const money=c=>'R$ '+(Number(c)/100).toFixed(2).replace('.',',');
+  const money=c=>'R$ '+(Number(c||0)/100).toFixed(2).replace('.',',');
+  const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const SKEY='chama_pro_session';
+  let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
+  let PRO=me?me.id:null;
+
   async function api(action,body){const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});return r.json().catch(()=>({error:'resposta inválida'}));}
   async function restGet(p){const r=await fetch(REST+p,{headers:{apikey:ANON,Authorization:'Bearer '+ANON}});return r.json().catch(()=>[]);}
+  async function gotrue(path,body){const r=await fetch(AUTHURL+path,{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify(body)});return {status:r.status,j:await r.json().catch(()=>({}))};}
+
+  /* ---- auth ---- */
+  let authMode='login';
+  const showAuth=()=>{el('auth').style.display='flex';};
+  const hideAuth=()=>{el('auth').style.display='none';};
+  function setAuthMode(m){authMode=m;el('authNameField').style.display=m==='signup'?'':'none';el('authTitle').textContent=m==='signup'?'Criar conta':'Entrar';el('authSub').textContent=m==='signup'?'Crie sua conta de profissional.':'Acesse sua conta de profissional.';el('authSubmit').textContent=m==='signup'?'Criar conta':'Entrar';el('authToggle').textContent=m==='signup'?'Já tem conta? Entrar':'Não tem conta? Criar conta';el('authErr').textContent='';}
+  function saveSession(user){me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0]};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
+  async function login(email,pass){const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});if(status>=400||!j.access_token)throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');saveSession(j.user);}
+  async function doAuth(){const email=(el('authEmail').value||'').trim().toLowerCase();const pass=el('authPass').value||'';const name=(el('authName').value||'').trim();el('authErr').textContent='';if(!email||pass.length<6){el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).';return;}const btn=el('authSubmit');btn.disabled=true;const old=btn.textContent;btn.textContent='…';try{if(authMode==='signup'){const {status,j}=await api('signup',{email,password:pass,role:'pro',fullName:name});if(status>=400&&j.code!=='email_taken')throw new Error(j.error||'falha ao criar conta');}await login(email,pass);hideAuth();enter();}catch(e){el('authErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=old;}}
+  function logout(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();}
+  function paintMe(){if(!me)return;el('proAvatar').textContent=initials(me.name);el('proAvatar2').textContent=initials(me.name);el('proName').textContent=me.name;el('proName2').textContent=me.name;}
+
+  /* ---- chamados / orçamento ---- */
   const sel={};
   async function loadChamados(){
-    const box=document.getElementById('chamadoList'); if(!box)return;
+    const box=el('chamadoList'); if(!box)return;
     box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Carregando chamados…</div>';
     try{
       const d=await api('list-chamados',{}); const list=d.chamados||[];
@@ -283,20 +317,20 @@
   async function openOrcamento(i){
     const c=(window.__chamados||[])[i]; if(!c)return;
     sel.requestId=c.requestId; sel.svc=c.serviceName||'Serviço';
-    document.getElementById('orcSub').textContent=sel.svc;
-    document.getElementById('labor').value='';
+    el('orcSub').textContent=sel.svc;
+    el('labor').value='';
     go('orcamento');
-    const box=document.getElementById('mats'); box.innerHTML='<div style="padding:12px;color:var(--ink3);font-size:13px">Carregando materiais…</div>';
+    const box=el('mats'); box.innerHTML='<div style="padding:12px;color:var(--ink3);font-size:13px">Carregando materiais…</div>';
     const mats=await restGet('/materials?select=id,name,unit,category&order=category');
     box.innerHTML=(mats||[]).map(m=>'<div class="mrow" data-mid="'+m.id+'"><div class="mi"><b>'+m.name+'</b><div>'+(m.unit||'un')+(m.category?' · '+m.category:'')+'</div></div><div class="step"><button data-dec>−</button><b data-q>0</b><button data-inc>+</button></div></div>').join('');
   }
   async function sendQuote(){
     if(!sel.requestId){toast('Abra um chamado primeiro');go('chamados');return;}
-    const raw=(document.getElementById('labor').value||'').replace(/[^0-9,\.]/g,'').replace(/\./g,'').replace(',','.');
+    const raw=(el('labor').value||'').replace(/[^0-9,\.]/g,'').replace(/\./g,'').replace(',','.');
     const laborCents=Math.round((parseFloat(raw)||0)*100);
     if(laborCents<=0){toast('Informe a mão de obra');return;}
     const materials=[...document.querySelectorAll('#mats .mrow')].map(r=>({materialId:r.dataset.mid,qty:+r.querySelector('[data-q]').textContent})).filter(x=>x.qty>0);
-    const btn=document.getElementById('sendQuote'); btn.disabled=true;
+    const btn=el('sendQuote'); btn.disabled=true;
     try{
       const j=await api('build-quote',{requestId:sel.requestId,proId:PRO,laborCents,materials});
       if(j.error){toast('Erro: '+j.error);return;}
@@ -305,20 +339,60 @@
     }finally{btn.disabled=false;}
   }
 
+  /* ---- agenda do profissional ---- */
+  const ST={requested:['Solicitado','#F5A623'],quoted:['Orçado','#F5A623'],accepted:['Aceito','#3B82F6'],scheduled:['Agendado','#3B82F6'],in_progress:['Em andamento','#F5A623'],completed:['Concluído','var(--ok600)'],cancelled:['Cancelado','var(--ink3)']};
+  function fmtDate(iso){if(!iso)return 'A combinar';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+  async function loadJobs(){
+    if(!me) return; const box=el('jobList'); if(!box)return;
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Carregando…</div>';
+    try{
+      const d=await api('list-bookings',{role:'pro',profileId:PRO});
+      const all=d.bookings||[]; window.__jobs=all;
+      const active=all.filter(b=>b.status==='scheduled'||b.status==='in_progress'||b.status==='requested'||b.status==='accepted');
+      const completedNet=all.filter(b=>b.status==='completed').reduce((s,b)=>s+Math.round(b.priceCents*0.85),0);
+      const escrow=active.reduce((s,b)=>s+b.priceCents,0);
+      if(el('earnWeek'))el('earnWeek').textContent=money(completedNet);
+      if(el('earnAvail'))el('earnAvail').textContent=money(completedNet);
+      if(el('earnEscrow'))el('earnEscrow').textContent=money(escrow);
+      if(!active.length){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Nenhum serviço agendado.<br><span style="font-size:12px">Monte orçamentos em “Chamados”.</span></div>';return;}
+      box.innerHTML=active.map(function(b){
+        const st=ST[b.status]||[b.status,'var(--ink3)']; const net=Math.round(b.priceCents*0.85);
+        const acts = b.status==='in_progress'
+          ? '<button class="btn btn-primary btn-sm" style="flex:1" data-done="'+b.bookingId+'">Concluir serviço</button>'
+          : '<button class="btn btn-primary btn-sm" style="flex:1" data-start="'+b.bookingId+'">Iniciar</button><button class="btn btn-ghost btn-sm" style="flex:1" data-cancel="'+b.bookingId+'">Recusar</button>';
+        return '<div class="req"><div class="t"><div class="avatar">'+initials(b.counterpartyName)+'</div><div><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div style="color:var(--ink2);font-size:12.5px;margin-top:2px">'+fmtDate(b.scheduledAt)+' · <span style="color:'+st[1]+';font-weight:700">'+st[0]+'</span></div></div><div class="price"><b>'+money(b.priceCents)+'</b><div>líq. '+money(net)+'</div></div></div><div class="act">'+acts+'</div></div>';
+      }).join('');
+    }catch(e){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Erro: '+e.message+'</div>';}
+  }
+  async function startJob(id){const j=await api('update-booking-status',{bookingId:id,status:'in_progress',actorId:PRO});if(j.error){toast('Erro: '+j.error);return;}toast('Serviço iniciado');loadJobs();}
+  async function cancelJob(id){const j=await api('update-booking-status',{bookingId:id,status:'cancelled',actorId:PRO});if(j.error){toast('Erro: '+j.error);return;}toast('Serviço recusado');loadJobs();}
+  async function completeJob(id){const j=await api('complete-booking',{bookingId:id});if(j.error){toast('Erro: '+j.error);return;}toast('Concluído! Repasse '+money(j.payoutCents));loadJobs();}
+
+  /* ---- eventos ---- */
   document.addEventListener('click',e=>{
     const ch=e.target.closest('.chamitem'); if(ch){openOrcamento(+ch.dataset.i);return;}
     const g=e.target.closest('[data-go]'); if(g){e.preventDefault();go(g.dataset.go);return;}
+    const stb=e.target.closest('[data-start]'); if(stb){startJob(stb.dataset.start);return;}
+    const cnb=e.target.closest('[data-cancel]'); if(cnb){cancelJob(cnb.dataset.cancel);return;}
+    const dnb=e.target.closest('[data-done]'); if(dnb){completeJob(dnb.dataset.done);return;}
+    const lo=e.target.closest('#logoutBtn'); if(lo){logout();return;}
     const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);return;}
     const av=e.target.closest('#avail'); if(av){av.classList.toggle('on');toast(av.classList.contains('on')?'Você está disponível':'Você ficou indisponível');return;}
-    const ac=e.target.closest('[data-accept]'); if(ac){document.getElementById('req1').style.display='none';toast('Chamado aceito! Adicionado à sua agenda.');return;}
-    const dc=e.target.closest('[data-decline]'); if(dc){document.getElementById('req1').style.display='none';toast('Chamado recusado.');return;}
-    const add=e.target.closest('[data-add]'); if(add){cart++;const b=document.getElementById('cartN');b.textContent=cart;b.style.display='grid';toast('Adicionado ao carrinho');return;}
+    const add=e.target.closest('[data-add]'); if(add){cart++;const b=el('cartN');b.textContent=cart;b.style.display='grid';toast('Adicionado ao carrinho');return;}
     const cc=e.target.closest('.catbar .c'); if(cc){document.querySelectorAll('.catbar .c').forEach(x=>x.classList.remove('sel'));cc.classList.add('sel');return;}
     const inc=e.target.closest('[data-inc]'); if(inc){const q=inc.closest('.mrow').querySelector('[data-q]');q.textContent=(+q.textContent+1);return;}
     const dec=e.target.closest('[data-dec]'); if(dec){const q=dec.closest('.mrow').querySelector('[data-q]');q.textContent=Math.max(0,+q.textContent-1);return;}
   });
   let cart=0;
-  document.getElementById('sendQuote').addEventListener('click',sendQuote);
+  el('sendQuote').addEventListener('click',sendQuote);
+  el('authSubmit').addEventListener('click',doAuth);
+  el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
+  el('authDemo').addEventListener('click',()=>{el('authEmail').value='pro.demo@chama.app';el('authPass').value='chama2026';setAuthMode('login');doAuth();});
+  el('authPass').addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();});
+
+  function enter(){ paintMe(); _go('painel'); loadJobs(); }
+  setAuthMode('login');
+  if(me){ enter(); } else { showAuth(); }
 </script>
 </body>
 </html>
