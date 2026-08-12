@@ -14,6 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <title>Chama</title>
 <link rel="stylesheet" href="app.css">
+<style>.afin{border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-family:inherit;font-size:14px;background:var(--surface);color:var(--ink);outline:0}.afin::placeholder{color:var(--ink3)}</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -137,9 +138,9 @@
       <div class="sec"><span class="eyebrow">Horário</span></div>
       <div class="slots" id="slots"><span class="slot">08:00</span><span class="slot sel">09:00</span><span class="slot">13:00</span><span class="slot">15:00</span></div>
       <div class="sec"><span class="eyebrow">Endereço</span></div>
-      <div class="card rowaddr">
+      <div class="card rowaddr" id="bookAddr" style="cursor:pointer">
         <div class="p"><svg><use href="#i-pin"/></svg></div>
-        <div style="flex:1"><b style="letter-spacing:-.01em">Rua dos Pinheiros, 480</b><div class="muted" style="font-size:12.5px">Apto 72 · Pinheiros</div></div>
+        <div style="flex:1"><b style="letter-spacing:-.01em" id="bookAddrLine">Adicionar endereço</b><div class="muted" style="font-size:12.5px" id="bookAddrSub">Toque para escolher onde será o serviço</div></div>
         <svg style="width:18px;height:18px;color:var(--ink3)"><use href="#i-chev"/></svg>
       </div>
       <div class="sec"><span class="eyebrow">Resumo</span></div>
@@ -207,6 +208,8 @@
         <div class="t"><b>Segurança AR + Cotas de robô</b><div>POV ao vivo, consentimento, SOS, cotas</div></div>
         <span class="chev"><svg><use href="#i-chev"/></svg></span>
       </a>
+      <div class="sec"><span class="eyebrow">Endereços</span></div>
+      <div class="listrow" id="addrManageBtn" style="cursor:pointer"><div class="i"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Meus endereços</b><div id="addrManageSub">Gerencie onde você recebe serviços</div></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <div class="sec"><span class="eyebrow">Conta</span></div>
       <div class="listrow" data-go="home"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-home"/></svg></div><div class="t"><b>Voltar ao início</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <div class="listrow" id="logoutBtn" style="cursor:pointer"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-back"/></svg></div><div class="t"><b>Sair da conta</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
@@ -261,6 +264,33 @@
       <div class="opt pick"><div style="display:flex;align-items:center;justify-content:space-between"><b>Formalizar com a Chama</b><span class="chip flame">Recomendado</span></div><p>Geramos contrato, eSocial e a guia DAE. Você acompanha pelo app.</p></div>
       <div class="opt"><b>Manter como diarista (até 2x/semana)</b><p>Escolha outro dia ou outra profissional para o 3º atendimento.</p></div>
       <button class="btn btn-primary" style="margin-top:16px" id="sheetOk">Continuar</button>
+    </div>
+  </div>
+
+  <!-- ENDEREÇOS (sheet) -->
+  <div class="sheetwrap" id="addrSheet">
+    <div class="sheet">
+      <div class="grab"></div>
+      <h3>Onde será o serviço?</h3>
+      <div id="addrList"></div>
+      <button class="btn btn-ghost btn-sm" id="addrNewBtn" style="width:100%;margin-top:10px">+ Adicionar endereço</button>
+      <div id="addrForm" style="display:none;margin-top:10px">
+        <div style="display:flex;gap:8px">
+          <input id="afLabel" placeholder="Rótulo (Casa)" class="afin" style="flex:1">
+          <input id="afCep" placeholder="CEP" class="afin" style="flex:1">
+        </div>
+        <input id="afLine" placeholder="Rua / logradouro" class="afin" style="width:100%;margin-top:8px">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="afNumber" placeholder="Nº" class="afin" style="width:90px">
+          <input id="afComplement" placeholder="Complemento" class="afin" style="flex:1">
+        </div>
+        <input id="afNeighborhood" placeholder="Bairro" class="afin" style="width:100%;margin-top:8px">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="afCity" placeholder="Cidade" class="afin" style="flex:1">
+          <input id="afState" placeholder="UF" maxlength="2" class="afin" style="width:70px;text-transform:uppercase">
+        </div>
+        <button class="btn btn-primary" id="addrSave" style="margin-top:12px">Salvar endereço</button>
+      </div>
     </div>
   </div>
 
@@ -425,7 +455,7 @@
     el('proList').innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Buscando profissionais…</div>';
     go('results');
     try{
-      const {j:intk}=await api('intake',{customerId:me.id,rawText:term});
+      const {j:intk}=await api('intake',{customerId:me.id,rawText:term,addressId:sel.addressId});
       if(!intk.requestId) throw new Error(intk.error||'falha no intake');
       sel.requestId=intk.requestId;
       const {j:m}=await api('match',{requestId:intk.requestId});
@@ -452,7 +482,7 @@
     if(!sel.proId){ go('home'); return; }
     const btn=el('confirmBtn'); btn.disabled=true;
     try{
-      const {j}=await api('create-booking',{customerId:me.id,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId});
+      const {j}=await api('create-booking',{customerId:me.id,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId,addressId:sel.addressId});
       if(j.needsFormalization){ el('sheet').classList.add('open'); return; }
       if(j.error){ alert('Erro ao agendar: '+j.error); return; }
       el('confAv').textContent=initials(sel.name); el('confPro').textContent=sel.name||'Profissional';
@@ -464,7 +494,7 @@
     if(!me){ showAuth(); return; }
     const t=(term||'').trim(); if(!t){ el('need').focus(); return; }
     try{
-      const {j}=await api('intake',{customerId:me.id,rawText:t,needsQuote:true});
+      const {j}=await api('intake',{customerId:me.id,rawText:t,needsQuote:true,addressId:sel.addressId});
       if(!j.requestId) throw new Error(j.error||'falha ao abrir chamado');
       el('need').value='';
       alert('Chamado aberto! Os profissionais vão te enviar orçamentos — acompanhe em “Orçam.”.');
@@ -596,9 +626,15 @@
     const rvb=e.target.closest('.reviewBtn'); if(rvb){ openReview(rvb.dataset.bid, rvb.dataset.pro); return; }
     const stq=e.target.closest('#starRow [data-star]'); if(stq){ setStars(+stq.dataset.star); return; }
     const rok=e.target.closest('#reviewOk'); if(rok){ submitReviewUI(); return; }
+    const ba=e.target.closest('#bookAddr'); if(ba){ openAddrSheet(); return; }
+    const am=e.target.closest('#addrManageBtn'); if(am){ openAddrSheet(); return; }
+    const anb=e.target.closest('#addrNewBtn'); if(anb){ el('addrForm').style.display = el('addrForm').style.display==='none'?'block':'none'; return; }
+    const asv=e.target.closest('#addrSave'); if(asv){ saveAddress(); return; }
+    const ai=e.target.closest('.addrItem'); if(ai){ pickAddress(ai.dataset.aid); return; }
     const lo=e.target.closest('#logoutBtn'); if(lo){ logout(); return; }
   });
   el('reviewSheet').addEventListener('click',e=>{ if(e.target===el('reviewSheet')) el('reviewSheet').classList.remove('open'); });
+  el('addrSheet').addEventListener('click',e=>{ if(e.target===el('addrSheet')) el('addrSheet').classList.remove('open'); });
   el('agdSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; [...el('agdSeg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); agdFilter=b.dataset.filter; renderAgenda(); });
   el('authSubmit').addEventListener('click',doAuth);
   el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
@@ -620,7 +656,42 @@
     } finally { btn.disabled=false; }
   }
 
-  function enter(){ paintMe(); loadAgenda(); _go('home'); }
+  /* ---------- endereços ---------- */
+  const fmtAddr=a=>(a.line||'')+(a.number?(', '+a.number):'');
+  const fmtAddrSub=a=>[a.complement,a.neighborhood,a.city].filter(Boolean).join(' · ');
+  function updateBookAddr(){
+    const a=(window.__addresses||[]).find(x=>x.id===sel.addressId);
+    if(a){ el('bookAddrLine').textContent=fmtAddr(a); el('bookAddrSub').textContent=fmtAddrSub(a)||'Endereço do serviço'; }
+    else { el('bookAddrLine').textContent='Adicionar endereço'; el('bookAddrSub').textContent='Toque para escolher onde será o serviço'; }
+    const n=(window.__addresses||[]).length; if(el('addrManageSub')) el('addrManageSub').textContent = n?(n+' endereço'+(n>1?'s':'')+' salvo'+(n>1?'s':'')):'Gerencie onde você recebe serviços';
+  }
+  async function loadAddresses(){
+    if(!me) return;
+    try{ const {j}=await api('list-addresses',{}); window.__addresses=j.addresses||[];
+      if(!sel.addressId){ const p=(window.__addresses).find(a=>a.is_primary)||window.__addresses[0]; sel.addressId=p?p.id:null; }
+      updateBookAddr();
+    }catch(_){}
+  }
+  function renderAddrList(){
+    const box=el('addrList'); const list=window.__addresses||[];
+    if(!list.length){ box.innerHTML='<div class="muted" style="font-size:13px;padding:4px 2px 2px">Nenhum endereço ainda. Adicione o primeiro abaixo.</div>'; return; }
+    box.innerHTML=list.map(a=>'<div class="card addrItem" data-aid="'+a.id+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:8px;'+(a.id===sel.addressId?'border-color:var(--flame)':'')+'"><div class="p"><svg style="width:18px;height:18px;color:var(--flame600)"><use href="#i-pin"/></svg></div><div style="flex:1"><b style="letter-spacing:-.01em">'+(a.label?a.label+' · ':'')+fmtAddr(a)+'</b><div class="muted" style="font-size:12px">'+(fmtAddrSub(a)||'')+'</div></div>'+(a.id===sel.addressId?'<span class="chip ok"><svg><use href="#i-check"/></svg></span>':'')+'</div>').join('');
+  }
+  function openAddrSheet(){ renderAddrList(); el('addrForm').style.display='none'; el('addrSheet').classList.add('open'); }
+  async function pickAddress(id){ sel.addressId=id; updateBookAddr(); renderAddrList(); try{ await api('set-primary-address',{addressId:id}); }catch(_){} setTimeout(()=>el('addrSheet').classList.remove('open'),250); }
+  async function saveAddress(){
+    const body={ label:el('afLabel').value||null, cep:el('afCep').value||null, line:el('afLine').value||'', number:el('afNumber').value||null, complement:el('afComplement').value||null, neighborhood:el('afNeighborhood').value||'', city:el('afCity').value||'', state:(el('afState').value||'').toUpperCase() };
+    if(!body.line||!body.neighborhood||!body.city||!body.state){ el('addrForm').style.display='block'; alert('Preencha rua, bairro, cidade e UF.'); return; }
+    const btn=el('addrSave'); btn.disabled=true;
+    try{
+      const {j}=await api('create-address',body);
+      if(j.error){ alert('Erro: '+j.error); return; }
+      ['afLabel','afCep','afLine','afNumber','afComplement','afNeighborhood','afCity','afState'].forEach(id=>el(id).value='');
+      sel.addressId=j.addressId; await loadAddresses(); renderAddrList(); el('addrForm').style.display='none';
+    } finally { btn.disabled=false; }
+  }
+
+  function enter(){ paintMe(); loadAddresses(); loadAgenda(); _go('home'); }
 
   /* ---------- init ---------- */
   setAuthMode('login');
