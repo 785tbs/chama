@@ -294,6 +294,18 @@
     </div>
   </div>
 
+  <!-- REAGENDAR (sheet) -->
+  <div class="sheetwrap" id="reschedSheet">
+    <div class="sheet">
+      <div class="grab"></div>
+      <h3>Reagendar serviço</h3>
+      <p>Escolha a nova data e horário.</p>
+      <input id="reschedAt" type="datetime-local" class="afin" style="width:100%;margin-top:6px">
+      <div id="reschedErr" style="color:#d33;font-size:12.5px;margin-top:8px;min-height:14px"></div>
+      <button class="btn btn-primary" style="margin-top:6px" id="reschedOk">Confirmar novo horário</button>
+    </div>
+  </div>
+
   <!-- AVALIAÇÃO (sheet) -->
   <div class="sheetwrap" id="reviewSheet">
     <div class="sheet">
@@ -599,6 +611,8 @@
         foot = b.myRating
           ? '<div class="kv" style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><span class="muted">Sua avaliação</span><span class="v" style="color:#F5A623;letter-spacing:2px">'+'★'.repeat(b.myRating)+'</span></div>'
           : '<button class="btn btn-ghost btn-sm reviewBtn" data-bid="'+b.bookingId+'" data-pro="'+b.counterpartyName+'" style="width:100%;margin-top:10px">Avaliar profissional</button>';
+      } else if(b.status!=='cancelled'){
+        foot='<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-ghost btn-sm reschedBtn" data-bid="'+b.bookingId+'" style="flex:1">Reagendar</button><button class="btn btn-ghost btn-sm cancelBkBtn" data-bid="'+b.bookingId+'" style="flex:1;color:#d33">Cancelar</button></div>';
       }
       return '<div class="card" style="margin-bottom:12px">'+
         '<div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">'+fmtDate(b.scheduledAt)+'</span>'+stTag(b.status)+'</div>'+
@@ -634,6 +648,9 @@
     const rvb=e.target.closest('.reviewBtn'); if(rvb){ openReview(rvb.dataset.bid, rvb.dataset.pro); return; }
     const stq=e.target.closest('#starRow [data-star]'); if(stq){ setStars(+stq.dataset.star); return; }
     const rok=e.target.closest('#reviewOk'); if(rok){ submitReviewUI(); return; }
+    const rsb=e.target.closest('.reschedBtn'); if(rsb){ openResched(rsb.dataset.bid); return; }
+    const cbk=e.target.closest('.cancelBkBtn'); if(cbk){ doCancelBk(cbk.dataset.bid); return; }
+    const rsok=e.target.closest('#reschedOk'); if(rsok){ doResched(); return; }
     const ba=e.target.closest('#bookAddr'); if(ba){ openAddrSheet(); return; }
     const am=e.target.closest('#addrManageBtn'); if(am){ openAddrSheet(); return; }
     const anb=e.target.closest('#addrNewBtn'); if(anb){ el('addrForm').style.display = el('addrForm').style.display==='none'?'block':'none'; return; }
@@ -643,6 +660,7 @@
   });
   el('reviewSheet').addEventListener('click',e=>{ if(e.target===el('reviewSheet')) el('reviewSheet').classList.remove('open'); });
   el('addrSheet').addEventListener('click',e=>{ if(e.target===el('addrSheet')) el('addrSheet').classList.remove('open'); });
+  el('reschedSheet').addEventListener('click',e=>{ if(e.target===el('reschedSheet')) el('reschedSheet').classList.remove('open'); });
   el('agdSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; [...el('agdSeg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); agdFilter=b.dataset.filter; renderAgenda(); });
   el('authSubmit').addEventListener('click',doAuth);
   el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
@@ -697,6 +715,27 @@
       ['afLabel','afCep','afLine','afNumber','afComplement','afNeighborhood','afCity','afState'].forEach(id=>el(id).value='');
       sel.addressId=j.addressId; await loadAddresses(); renderAddrList(); el('addrForm').style.display='none';
     } finally { btn.disabled=false; }
+  }
+
+  /* ---------- cancelar / reagendar ---------- */
+  let reschedBid=null;
+  function openResched(bid){ reschedBid=bid; el('reschedErr').textContent=''; el('reschedAt').value=''; el('reschedSheet').classList.add('open'); }
+  async function doResched(){
+    const v=el('reschedAt').value; if(!v){ el('reschedErr').textContent='Escolha data e horário.'; return; }
+    const iso=new Date(v).toISOString();
+    const btn=el('reschedOk'); btn.disabled=true;
+    try{
+      const {j}=await api('reschedule-booking',{ bookingId:reschedBid, scheduledAt:iso });
+      if(j.needsFormalization){ el('reschedErr').textContent='Esse dia excede 2x/semana com o profissional (exige formalização).'; return; }
+      if(j.error){ el('reschedErr').textContent=j.error; return; }
+      el('reschedSheet').classList.remove('open'); loadAgenda();
+    } finally { btn.disabled=false; }
+  }
+  async function doCancelBk(bid){
+    if(!confirm('Cancelar este agendamento?')) return;
+    const {j}=await api('cancel-booking',{ bookingId:bid });
+    if(j.error){ alert('Erro: '+j.error); return; }
+    loadAgenda();
   }
 
   function enter(){ paintMe(); loadAddresses(); loadAgenda(); _go('home'); }
