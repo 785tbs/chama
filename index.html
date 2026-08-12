@@ -264,6 +264,20 @@
     </div>
   </div>
 
+  <!-- AVALIAÇÃO (sheet) -->
+  <div class="sheetwrap" id="reviewSheet">
+    <div class="sheet">
+      <div class="grab"></div>
+      <h3>Como foi o serviço?</h3>
+      <p id="revPro">Avalie o profissional.</p>
+      <div id="starRow" style="display:flex;gap:10px;justify-content:center;margin:10px 0 2px;font-size:36px;color:#F5A623;cursor:pointer">
+        <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
+      </div>
+      <textarea id="revComment" placeholder="Conte como foi (opcional)" style="width:100%;border:1px solid var(--line);border-radius:14px;padding:12px;font-family:inherit;font-size:14px;min-height:70px;margin-top:10px;background:var(--surface);color:var(--ink)"></textarea>
+      <button class="btn btn-primary" style="margin-top:14px" id="reviewOk">Enviar avaliação</button>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <nav class="tabbar" id="nav">
     <button data-go="home" data-tab="home"><svg><use href="#i-home"/></svg>Início</button>
@@ -318,7 +332,12 @@
   let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
 
   async function api(action,body){
-    const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
+    // Envia o access_token do usuário como Bearer (o backend deriva o uid dele).
+    // apikey continua sendo o anon (exigência do gateway). Sem sessão, usa anon
+    // (só ações públicas como signup são aceitas nesse caso).
+    const bearer=(me&&me.access_token)?me.access_token:ANON;
+    const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+bearer,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
+    if(r.status===401 && me){ sessionExpired(); }
     return {status:r.status, j:await r.json().catch(()=>({error:'resposta inválida'}))};
   }
   async function gotrue(path,body){
@@ -339,14 +358,21 @@
     el('authToggle').textContent = m==='signup'?'Já tem conta? Entrar':'Não tem conta? Criar conta';
     el('authErr').textContent='';
   }
-  function saveSession(user){
-    me={ id:user.id, email:user.email, name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0] };
+  function saveSession(tok){
+    const user=tok.user||{};
+    me={ id:user.id, email:user.email, name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],
+         access_token:tok.access_token, refresh_token:tok.refresh_token };
     localStorage.setItem(SKEY, JSON.stringify(me));
+  }
+  function sessionExpired(){
+    localStorage.removeItem(SKEY); me=null; window.__bookings=[]; window.__quotes=[];
+    setAuthMode('login'); showAuth();
+    const err=el('authErr'); if(err) err.textContent='Sua sessão expirou. Entre novamente.';
   }
   async function login(email,pass){
     const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});
     if(status>=400||!j.access_token) throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');
-    saveSession(j.user);
+    saveSession(j);
   }
   async function doAuth(){
     const email=(el('authEmail').value||'').trim().toLowerCase();
@@ -530,10 +556,16 @@
     const list=(window.__bookings||[]).filter(b=> agdFilter==='done' ? b.status==='completed' : UPCOMING.includes(b.status));
     if(!list.length){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Nada por aqui ainda.</div>'; return; }
     box.innerHTML=list.map(function(b){
+      let foot='';
+      if(b.status==='completed'){
+        foot = b.myRating
+          ? '<div class="kv" style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><span class="muted">Sua avaliação</span><span class="v" style="color:#F5A623;letter-spacing:2px">'+'★'.repeat(b.myRating)+'</span></div>'
+          : '<button class="btn btn-ghost btn-sm reviewBtn" data-bid="'+b.bookingId+'" data-pro="'+b.counterpartyName+'" style="width:100%;margin-top:10px">Avaliar profissional</button>';
+      }
       return '<div class="card" style="margin-bottom:12px">'+
         '<div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">'+fmtDate(b.scheduledAt)+'</span>'+stTag(b.status)+'</div>'+
         '<div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-wrench"/></svg></div>'+
-        '<div class="info"><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div>'+money(b.priceCents)+' · em custódia</div></div></div></div>';
+        '<div class="info"><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div>'+money(b.priceCents)+' · em custódia</div></div></div>'+foot+'</div>';
     }).join('');
   }
   function paintNext(){
@@ -561,13 +593,32 @@
     const sw=e.target.closest('.swapBtn'); if(sw){ const box=document.querySelector('.qalts[data-qm="'+sw.dataset.qm+'"]'); if(box) box.style.display = box.style.display==='none'?'block':'none'; return; }
     const qa=e.target.closest('.qalt'); if(qa){ swap(qa.dataset.qm, qa.dataset.off); return; }
     const aq=e.target.closest('#acceptQuoteBtn'); if(aq){ acceptQuote(); return; }
+    const rvb=e.target.closest('.reviewBtn'); if(rvb){ openReview(rvb.dataset.bid, rvb.dataset.pro); return; }
+    const stq=e.target.closest('#starRow [data-star]'); if(stq){ setStars(+stq.dataset.star); return; }
+    const rok=e.target.closest('#reviewOk'); if(rok){ submitReviewUI(); return; }
     const lo=e.target.closest('#logoutBtn'); if(lo){ logout(); return; }
   });
+  el('reviewSheet').addEventListener('click',e=>{ if(e.target===el('reviewSheet')) el('reviewSheet').classList.remove('open'); });
   el('agdSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; [...el('agdSeg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); agdFilter=b.dataset.filter; renderAgenda(); });
   el('authSubmit').addEventListener('click',doAuth);
   el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
   el('authDemo').addEventListener('click',()=>{ el('authEmail').value='cliente.demo@chama.app'; el('authPass').value='chama2026'; setAuthMode('login'); doAuth(); });
   el('authPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
+
+  /* ---------- avaliações ---------- */
+  const rev={ bid:null, rating:0 };
+  function paintStars(){ [...document.querySelectorAll('#starRow [data-star]')].forEach(s=>{ s.textContent = (+s.dataset.star<=rev.rating)?'★':'☆'; }); }
+  function setStars(n){ rev.rating=n; paintStars(); }
+  function openReview(bid, pro){ rev.bid=bid; rev.rating=0; el('revPro').textContent='Avalie '+(pro||'o profissional')+'.'; el('revComment').value=''; paintStars(); el('reviewSheet').classList.add('open'); }
+  async function submitReviewUI(){
+    if(!rev.rating){ el('revPro').textContent='Escolha de 1 a 5 estrelas.'; return; }
+    const btn=el('reviewOk'); btn.disabled=true;
+    try{
+      const {j}=await api('submit-review',{ bookingId:rev.bid, rating:rev.rating, comment:el('revComment').value||null });
+      if(j.error && j.code!=='already_reviewed'){ alert('Erro: '+j.error); return; }
+      el('reviewSheet').classList.remove('open'); loadAgenda();
+    } finally { btn.disabled=false; }
+  }
 
   function enter(){ paintMe(); loadAgenda(); _go('home'); }
 

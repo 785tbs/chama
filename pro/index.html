@@ -165,10 +165,9 @@
       </div>
       <div class="sec"><span class="eyebrow">Avaliações</span></div>
       <div class="card">
-        <div class="rsum"><div><div class="sc">4,9</div><div class="muted" style="font-size:11.5px">128 avaliações</div></div>
+        <div class="rsum"><div><div class="sc" id="revScore">—</div><div class="muted" style="font-size:11.5px"><span id="revCount">0</span> avaliações</div></div>
           <div class="bars"><div class="barrow">5<div class="bar"><i style="width:92%"></i></div></div><div class="barrow">4<div class="bar"><i style="width:7%"></i></div></div><div class="barrow">3<div class="bar"><i style="width:1%"></i></div></div></div></div>
-        <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">AB</div><b style="font-size:13.5px">Ana B.</b><span class="st">★★★★★</span></div><p>“Deixou o apê impecável e foi super pontual. Já reagendei!”</p><div class="sv">Faxina · há 3 dias</div></div>
-        <div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">RM</div><b style="font-size:13.5px">Rui M.</b><span class="st">★★★★★</span></div><p>“Organizou o closet inteiro com muito capricho.”</p><div class="sv">Organização · há 1 semana</div></div>
+        <div id="revList"><div class="muted" style="font-size:13px;padding:8px 0">Carregando avaliações…</div></div>
       </div>
       <div class="sec"><span class="eyebrow">Conta</span></div>
       <div class="listrow" id="logoutBtn" style="cursor:pointer"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-back"/></svg></div><div class="t"><b>Sair da conta</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
@@ -274,7 +273,7 @@
   const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados'};
   const el=id=>document.getElementById(id);
   function _go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
-  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); }
+  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); else if(n==='perfil') loadReviews(); }
   let toastT; function toast(m){const e=el('toast');e.textContent=m;e.style.opacity='1';e.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(10px)';},1900);}
 
   /* ---- backend real ---- */
@@ -287,7 +286,7 @@
   let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
   let PRO=me?me.id:null;
 
-  async function api(action,body){const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});return r.json().catch(()=>({error:'resposta inválida'}));}
+  async function api(action,body){const bearer=(me&&me.access_token)?me.access_token:ANON;const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+bearer,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});if(r.status===401&&me){sessionExpired();}return r.json().catch(()=>({error:'resposta inválida'}));}
   async function restGet(p){const r=await fetch(REST+p,{headers:{apikey:ANON,Authorization:'Bearer '+ANON}});return r.json().catch(()=>[]);}
   async function gotrue(path,body){const r=await fetch(AUTHURL+path,{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify(body)});return {status:r.status,j:await r.json().catch(()=>({}))};}
 
@@ -296,11 +295,26 @@
   const showAuth=()=>{el('auth').style.display='flex';};
   const hideAuth=()=>{el('auth').style.display='none';};
   function setAuthMode(m){authMode=m;el('authNameField').style.display=m==='signup'?'':'none';el('authTitle').textContent=m==='signup'?'Criar conta':'Entrar';el('authSub').textContent=m==='signup'?'Crie sua conta de profissional.':'Acesse sua conta de profissional.';el('authSubmit').textContent=m==='signup'?'Criar conta':'Entrar';el('authToggle').textContent=m==='signup'?'Já tem conta? Entrar':'Não tem conta? Criar conta';el('authErr').textContent='';}
-  function saveSession(user){me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0]};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
-  async function login(email,pass){const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});if(status>=400||!j.access_token)throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');saveSession(j.user);}
+  function saveSession(tok){const user=tok.user||{};me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],access_token:tok.access_token,refresh_token:tok.refresh_token};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
+  function sessionExpired(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();const err=el('authErr');if(err)err.textContent='Sua sessão expirou. Entre novamente.';}
+  async function login(email,pass){const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});if(status>=400||!j.access_token)throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');saveSession(j);}
   async function doAuth(){const email=(el('authEmail').value||'').trim().toLowerCase();const pass=el('authPass').value||'';const name=(el('authName').value||'').trim();el('authErr').textContent='';if(!email||pass.length<6){el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).';return;}const btn=el('authSubmit');btn.disabled=true;const old=btn.textContent;btn.textContent='…';try{if(authMode==='signup'){const {status,j}=await api('signup',{email,password:pass,role:'pro',fullName:name});if(status>=400&&j.code!=='email_taken')throw new Error(j.error||'falha ao criar conta');}await login(email,pass);hideAuth();enter();}catch(e){el('authErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=old;}}
   function logout(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();}
   function paintMe(){if(!me)return;el('proAvatar').textContent=initials(me.name);el('proAvatar2').textContent=initials(me.name);el('proName').textContent=me.name;el('proName2').textContent=me.name;}
+  async function loadReviews(){
+    if(!me) return; const box=el('revList'); if(!box) return;
+    try{
+      const j=await api('list-reviews',{targetId:PRO});
+      const rvs=j.reviews||[];
+      if(el('revScore')) el('revScore').textContent = j.avg ? String(j.avg).replace('.',',') : '—';
+      if(el('revCount')) el('revCount').textContent = j.count||0;
+      if(!rvs.length){ box.innerHTML='<div class="muted" style="font-size:13px;padding:8px 0">Ainda sem avaliações. Conclua serviços para recebê-las.</div>'; return; }
+      box.innerHTML=rvs.map(function(r){
+        const stars='★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
+        return '<div class="review"><div class="rh"><div class="avatar" style="width:32px;height:32px;flex-basis:32px;font-size:12px">'+initials(r.authorName)+'</div><b style="font-size:13.5px">'+r.authorName+'</b><span class="st">'+stars+'</span></div>'+(r.comment?'<p>“'+r.comment+'”</p>':'')+'<div class="sv">'+r.serviceName+'</div></div>';
+      }).join('');
+    }catch(e){ box.innerHTML='<div class="muted" style="font-size:13px;padding:8px 0">Erro ao carregar avaliações.</div>'; }
+  }
 
   /* ---- chamados / orçamento ---- */
   const sel={};
