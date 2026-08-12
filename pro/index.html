@@ -286,7 +286,14 @@
   let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
   let PRO=me?me.id:null;
 
-  async function api(action,body){const bearer=(me&&me.access_token)?me.access_token:ANON;const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+bearer,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});if(r.status===401&&me){sessionExpired();}return r.json().catch(()=>({error:'resposta inválida'}));}
+  async function api(action,body){
+    if(me && me.expires_at && Date.now()>me.expires_at-5000){ await refresh(); }
+    const send=()=>fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((me&&me.access_token)||ANON),'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
+    let r=await send();
+    if(r.status===401 && me){ if(await refresh()){ r=await send(); } else { sessionExpired(); } }
+    return r.json().catch(()=>({error:'resposta inválida'}));
+  }
+  async function refresh(){ if(!me||!me.refresh_token) return false; const {status,j}=await gotrue('/token?grant_type=refresh_token',{refresh_token:me.refresh_token}); if(status>=400||!j.access_token){ return false; } saveSession(j); return true; }
   async function restGet(p){const r=await fetch(REST+p,{headers:{apikey:ANON,Authorization:'Bearer '+ANON}});return r.json().catch(()=>[]);}
   async function gotrue(path,body){const r=await fetch(AUTHURL+path,{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify(body)});return {status:r.status,j:await r.json().catch(()=>({}))};}
 
@@ -295,7 +302,7 @@
   const showAuth=()=>{el('auth').style.display='flex';};
   const hideAuth=()=>{el('auth').style.display='none';};
   function setAuthMode(m){authMode=m;el('authNameField').style.display=m==='signup'?'':'none';el('authTitle').textContent=m==='signup'?'Criar conta':'Entrar';el('authSub').textContent=m==='signup'?'Crie sua conta de profissional.':'Acesse sua conta de profissional.';el('authSubmit').textContent=m==='signup'?'Criar conta':'Entrar';el('authToggle').textContent=m==='signup'?'Já tem conta? Entrar':'Não tem conta? Criar conta';el('authErr').textContent='';}
-  function saveSession(tok){const user=tok.user||{};me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],access_token:tok.access_token,refresh_token:tok.refresh_token};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
+  function saveSession(tok){const user=tok.user||(me||{});me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],access_token:tok.access_token,refresh_token:tok.refresh_token,expires_at:Date.now()+((tok.expires_in||3600)*1000)};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
   function sessionExpired(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();const err=el('authErr');if(err)err.textContent='Sua sessão expirou. Entre novamente.';}
   async function login(email,pass){const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});if(status>=400||!j.access_token)throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');saveSession(j);}
   async function doAuth(){const email=(el('authEmail').value||'').trim().toLowerCase();const pass=el('authPass').value||'';const name=(el('authName').value||'').trim();el('authErr').textContent='';if(!email||pass.length<6){el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).';return;}const btn=el('authSubmit');btn.disabled=true;const old=btn.textContent;btn.textContent='…';try{if(authMode==='signup'){const {status,j}=await api('signup',{email,password:pass,role:'pro',fullName:name});if(status>=400&&j.code!=='email_taken')throw new Error(j.error||'falha ao criar conta');}await login(email,pass);hideAuth();enter();}catch(e){el('authErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=old;}}

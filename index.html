@@ -365,10 +365,17 @@
     // Envia o access_token do usuário como Bearer (o backend deriva o uid dele).
     // apikey continua sendo o anon (exigência do gateway). Sem sessão, usa anon
     // (só ações públicas como signup são aceitas nesse caso).
-    const bearer=(me&&me.access_token)?me.access_token:ANON;
-    const r=await fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+bearer,'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
-    if(r.status===401 && me){ sessionExpired(); }
+    if(me && me.expires_at && Date.now() > me.expires_at-5000){ await refresh(); }
+    const send=()=>fetch(API,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((me&&me.access_token)||ANON),'content-type':'application/json'},body:JSON.stringify(Object.assign({action},body))});
+    let r=await send();
+    if(r.status===401 && me){ if(await refresh()){ r=await send(); } else { sessionExpired(); } }
     return {status:r.status, j:await r.json().catch(()=>({error:'resposta inválida'}))};
+  }
+  async function refresh(){
+    if(!me||!me.refresh_token) return false;
+    const {status,j}=await gotrue('/token?grant_type=refresh_token',{refresh_token:me.refresh_token});
+    if(status>=400||!j.access_token){ return false; }
+    saveSession(j); return true;
   }
   async function gotrue(path,body){
     const r=await fetch(AUTHURL+path,{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify(body)});
@@ -389,9 +396,10 @@
     el('authErr').textContent='';
   }
   function saveSession(tok){
-    const user=tok.user||{};
+    const user=tok.user||(me||{});
     me={ id:user.id, email:user.email, name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],
-         access_token:tok.access_token, refresh_token:tok.refresh_token };
+         access_token:tok.access_token, refresh_token:tok.refresh_token,
+         expires_at: Date.now() + ((tok.expires_in||3600)*1000) };
     localStorage.setItem(SKEY, JSON.stringify(me));
   }
   function sessionExpired(){
