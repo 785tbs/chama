@@ -169,6 +169,8 @@
           <div class="bars"><div class="barrow">5<div class="bar"><i style="width:92%"></i></div></div><div class="barrow">4<div class="bar"><i style="width:7%"></i></div></div><div class="barrow">3<div class="bar"><i style="width:1%"></i></div></div></div></div>
         <div id="revList"><div class="muted" style="font-size:13px;padding:8px 0">Carregando avaliações…</div></div>
       </div>
+      <div class="sec"><span class="eyebrow">Indique e ganhe</span></div>
+      <div class="listrow" id="affOpen" style="cursor:pointer"><div class="i" style="background:var(--tint);color:var(--flame600)"><svg><use href="#i-trend"/></svg></div><div class="t"><b>Programa de afiliados</b><div>Ganhe 20% por 1 ano de quem entrar pelo seu link</div></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <div class="sec"><span class="eyebrow">Conta</span></div>
       <div class="listrow" id="logoutBtn" style="cursor:pointer"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-back"/></svg></div><div class="t"><b>Sair da conta</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
     </div>
@@ -242,6 +244,34 @@
     <div class="footbtn"><button class="btn btn-primary" id="sendQuote">Enviar orçamento</button></div>
   </section>
 
+  <!-- AFILIADOS -->
+  <section class="screen" data-screen="afiliados">
+    <div class="scroll">
+      <div class="app-top"><button class="iconbtn" data-go="perfil" aria-label="Voltar"><svg><use href="#i-back"/></svg></button><div class="ttl">Indique e ganhe<small>20% da comissão por 12 meses</small></div></div>
+      <div class="card dark">
+        <span class="eyebrow">Seu saldo de comissões</span>
+        <div class="big" id="affBalance">R$ 0,00</div>
+        <div class="split"><div class="b"><div class="k">Indicados</div><div class="v" id="affReferred">0</div></div><div class="b"><div class="k">Total ganho</div><div class="v" id="affTotal">R$ 0,00</div></div></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Seu link de indicação</span></div>
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="affLink" readonly value="" style="flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink)">
+          <button class="btn btn-ghost btn-sm" id="affCopy" style="padding:10px 12px">Copiar</button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="affWhats" style="width:100%;margin-top:8px">Compartilhar no WhatsApp</button>
+        <p class="muted" style="font-size:11.5px;margin:9px 2px 0">Ganhe <b>20% da comissão da Chama</b> por 12 meses de cada cliente ou profissional que entrar pelo seu link. Só em serviços concluídos.</p>
+      </div>
+      <div class="sec"><span class="eyebrow">Receber</span></div>
+      <div class="card" style="padding:12px 16px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" id="affPix" style="flex:1">Sacar via PIX</button>
+        <button class="btn btn-ghost btn-sm" id="affCredit" style="flex:1">Usar como crédito</button>
+      </div>
+      <div class="sec"><span class="eyebrow">Comissões recentes</span></div>
+      <div id="affList"></div>
+    </div>
+  </section>
+
   <!-- AUTH (login / cadastro do profissional) -->
   <div id="auth" style="position:fixed;inset:0;z-index:60;background:#fff;display:none;flex-direction:column;justify-content:center;padding:28px 22px">
     <div style="max-width:400px;width:100%;margin:0 auto">
@@ -270,10 +300,10 @@
 
 <script>
   const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
-  const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados'};
+  const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados',afiliados:'painel'};
   const el=id=>document.getElementById(id);
   function _go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
-  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); else if(n==='perfil') loadReviews(); }
+  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); else if(n==='perfil') loadReviews(); else if(n==='afiliados') loadAffiliate(); }
   let toastT; function toast(m){const e=el('toast');e.textContent=m;e.style.opacity='1';e.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(10px)';},1900);}
 
   /* ---- backend real ---- */
@@ -305,7 +335,7 @@
   function saveSession(tok){const user=tok.user||(me||{});me={id:user.id,email:user.email,name:(user.user_metadata&&user.user_metadata.full_name)||(user.email||'').split('@')[0],access_token:tok.access_token,refresh_token:tok.refresh_token,expires_at:Date.now()+((tok.expires_in||3600)*1000)};localStorage.setItem(SKEY,JSON.stringify(me));PRO=me.id;}
   function sessionExpired(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();const err=el('authErr');if(err)err.textContent='Sua sessão expirou. Entre novamente.';}
   async function login(email,pass){const {status,j}=await gotrue('/token?grant_type=password',{email,password:pass});if(status>=400||!j.access_token)throw new Error(j.error_description||j.msg||j.error||'e-mail ou senha inválidos');saveSession(j);}
-  async function doAuth(){const email=(el('authEmail').value||'').trim().toLowerCase();const pass=el('authPass').value||'';const name=(el('authName').value||'').trim();el('authErr').textContent='';if(!email||pass.length<6){el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).';return;}const btn=el('authSubmit');btn.disabled=true;const old=btn.textContent;btn.textContent='…';try{if(authMode==='signup'){const {status,j}=await api('signup',{email,password:pass,role:'pro',fullName:name});if(status>=400&&j.code!=='email_taken')throw new Error(j.error||'falha ao criar conta');}await login(email,pass);hideAuth();enter();}catch(e){el('authErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=old;}}
+  async function doAuth(){const email=(el('authEmail').value||'').trim().toLowerCase();const pass=el('authPass').value||'';const name=(el('authName').value||'').trim();el('authErr').textContent='';if(!email||pass.length<6){el('authErr').textContent='Informe e-mail e senha (mín. 6 caracteres).';return;}const btn=el('authSubmit');btn.disabled=true;const old=btn.textContent;btn.textContent='…';try{if(authMode==='signup'){const {status,j}=await api('signup',{email,password:pass,role:'pro',fullName:name,ref:(localStorage.getItem('chama_ref')||undefined)});if(status>=400&&j.code!=='email_taken')throw new Error(j.error||'falha ao criar conta');}await login(email,pass);hideAuth();enter();}catch(e){el('authErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=old;}}
   function logout(){localStorage.removeItem(SKEY);me=null;PRO=null;window.__jobs=[];setAuthMode('login');showAuth();}
   function paintMe(){if(!me)return;el('proAvatar').textContent=initials(me.name);el('proAvatar2').textContent=initials(me.name);el('proName').textContent=me.name;el('proName2').textContent=me.name;}
   async function loadReviews(){
@@ -410,6 +440,32 @@
   el('authToggle').addEventListener('click',()=>setAuthMode(authMode==='login'?'signup':'login'));
   el('authDemo').addEventListener('click',()=>{el('authEmail').value='pro.demo@chama.app';el('authPass').value='chama2026';setAuthMode('login');doAuth();});
   el('authPass').addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();});
+
+  /* ---- afiliados ---- */
+  function affLinkFor(code){ const base=location.origin+location.pathname.replace(/pro\/index\.html$/,'').replace(/pro\/$/,'').replace(/index\.html$/,''); return base+'?ref='+code; }
+  async function loadAffiliate(){
+    if(!me) return; const box=el('affList'); if(!box) return;
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Carregando…</div>';
+    try{
+      const j=await api('get-affiliate',{});
+      el('affBalance').textContent=money(j.balanceCents);
+      el('affReferred').textContent=j.referredCount||0;
+      el('affTotal').textContent=money(j.totalEarnedCents);
+      el('affLink').value=affLinkFor(j.code);
+      const cs=j.commissions||[];
+      box.innerHTML=cs.length?cs.map(x=>'<div class="card" style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:36px;height:36px;border-radius:10px;background:var(--oktint);color:var(--ok600);display:grid;place-items:center;flex:0 0 36px"><svg style="width:17px;height:17px"><use href="#i-check"/></svg></div><div style="flex:1"><b style="font-size:13.5px">'+x.referredName+'</b><div class="muted" style="font-size:12px">'+(x.role==='pro'?'Profissional indicado':'Cliente indicado')+'</div></div><b style="color:var(--ok600)">+'+money(x.amountCents)+'</b></div>').join('') : '<div class="card" style="text-align:center;color:var(--ink3)">Ainda sem comissões. Compartilhe seu link!</div>';
+    }catch(e){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Erro: '+e.message+'</div>'; }
+  }
+  async function affShareCopy(){ const link=el('affLink').value; try{ await navigator.clipboard.writeText(link); }catch(_){ el('affLink').select(); try{document.execCommand('copy');}catch(__){} } toast('Link copiado'); }
+  function affWhatsShare(){ const msg='Trabalhe com a Chama ou contrate profissionais verificados. Entre pelo meu link: '+el('affLink').value; window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); }
+  async function affPixSaque(){ const key=prompt('Sua chave PIX para receber:'); if(!key) return; const j=await api('request-affiliate-payout',{method:'pix',pixKey:key}); if(j.error){ toast(j.error); return; } toast('Saque solicitado: '+money(j.withdrawnCents)); loadAffiliate(); }
+  async function affCreditar(){ const j=await api('request-affiliate-payout',{method:'credit'}); toast(j.message||'Saldo mantido como crédito'); }
+  el('affOpen') && el('affOpen').addEventListener('click',()=>go('afiliados'));
+  el('affCopy').addEventListener('click',affShareCopy);
+  el('affWhats').addEventListener('click',affWhatsShare);
+  el('affPix').addEventListener('click',affPixSaque);
+  el('affCredit').addEventListener('click',affCreditar);
+  try{ const rp=new URLSearchParams(location.search).get('ref'); if(rp) localStorage.setItem('chama_ref', rp); }catch(_){}
 
   function enter(){ paintMe(); _go('painel'); loadJobs(); }
   setAuthMode('login');

@@ -208,6 +208,8 @@
         <div class="t"><b>Segurança AR + Cotas de robô</b><div>POV ao vivo, consentimento, SOS, cotas</div></div>
         <span class="chev"><svg><use href="#i-chev"/></svg></span>
       </a>
+      <div class="sec"><span class="eyebrow">Indique e ganhe</span></div>
+      <div class="listrow" id="affOpen" style="cursor:pointer"><div class="i" style="background:var(--tint);color:var(--flame600)"><svg><use href="#i-scale"/></svg></div><div class="t"><b>Programa de afiliados</b><div>Ganhe 20% por 1 ano de quem entrar pelo seu link</div></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <div class="sec"><span class="eyebrow">Endereços</span></div>
       <div class="listrow" id="addrManageBtn" style="cursor:pointer"><div class="i"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Meus endereços</b><div id="addrManageSub">Gerencie onde você recebe serviços</div></div><span class="chev"><svg><use href="#i-chev"/></svg></span></div>
       <div class="sec"><span class="eyebrow">Conta</span></div>
@@ -266,6 +268,39 @@
       <button class="btn btn-primary" style="margin-top:16px" id="sheetOk">Continuar</button>
     </div>
   </div>
+
+  <!-- AFILIADOS -->
+  <section class="screen" data-screen="afiliados">
+    <div class="scroll">
+      <div class="app-top">
+        <button class="iconbtn" data-go="perfil" aria-label="Voltar"><svg><use href="#i-back"/></svg></button>
+        <div class="ttl">Indique e ganhe<small>20% da comissão por 12 meses</small></div>
+      </div>
+      <div class="card" style="background:var(--flame);color:#fff;border:0">
+        <div style="font-size:13px;opacity:.9">Seu saldo de comissões</div>
+        <div style="font-size:32px;font-weight:800;letter-spacing:-.02em" id="affBalance">R$ 0,00</div>
+        <div style="display:flex;gap:14px;margin-top:8px;font-size:12.5px;opacity:.95">
+          <span><b id="affReferred">0</b> indicados</span><span>·</span><span>total ganho <b id="affTotal">R$ 0,00</b></span>
+        </div>
+      </div>
+      <div class="sec"><span class="eyebrow">Seu link de indicação</span></div>
+      <div class="card" style="padding:12px 14px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="affLink" readonly class="afin" style="flex:1;font-size:12px" value="">
+          <button class="btn btn-ghost btn-sm" id="affCopy" style="padding:10px 12px">Copiar</button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="affWhats" style="width:100%;margin-top:8px;justify-content:center">Compartilhar no WhatsApp</button>
+        <p class="muted" style="font-size:11.5px;margin:9px 2px 0">Ganhe <b>20% da comissão da Chama</b> em cada serviço de quem entrar pelo seu link — clientes e profissionais — por <b>12 meses</b>. Você só ganha em serviços concluídos.</p>
+      </div>
+      <div class="sec"><span class="eyebrow">Receber</span></div>
+      <div class="card" style="padding:12px 14px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" id="affPix" style="flex:1">Sacar via PIX</button>
+        <button class="btn btn-ghost btn-sm" id="affCredit" style="flex:1">Usar como crédito</button>
+      </div>
+      <div class="sec"><span class="eyebrow">Comissões recentes</span></div>
+      <div id="affList"></div>
+    </div>
+  </section>
 
   <!-- ENDEREÇOS (sheet) -->
   <div class="sheetwrap" id="addrSheet">
@@ -335,7 +370,7 @@
   const nav = document.getElementById('nav');
   const navBtns = [...nav.querySelectorAll('button')];
   const withNav = ['home','results','orcamentos','agenda','perfil'];
-  const tabFor = { home:'home', results:'results', book:'results', confirm:'results', orcamentos:'orcamentos', quote:'orcamentos', agenda:'agenda', perfil:'perfil' };
+  const tabFor = { home:'home', results:'results', book:'results', confirm:'results', orcamentos:'orcamentos', quote:'orcamentos', agenda:'agenda', perfil:'perfil', afiliados:'perfil' };
   function go(name){
     const s = screens.find(x=>x.dataset.screen===name); if(!s) return;
     screens.forEach(x=>x.classList.toggle('active', x===s));
@@ -433,7 +468,7 @@
     const btn=el('authSubmit'); btn.disabled=true; const old=btn.textContent; btn.textContent='…';
     try{
       if(authMode==='signup'){
-        const {status,j}=await api('signup',{email,password:pass,role:'customer',fullName:name});
+        const {status,j}=await api('signup',{email,password:pass,role:'customer',fullName:name,ref:(localStorage.getItem('chama_ref')||undefined)});
         if(status>=400 && j.code!=='email_taken') throw new Error(j.error||'falha ao criar conta');
       }
       await login(email,pass);
@@ -631,7 +666,7 @@
 
   /* ---------- navegação com carga de dados ---------- */
   const _go=window.go;
-  window.go=function(n){ _go(n); if(!me) return; if(n==='agenda') loadAgenda(); else if(n==='orcamentos') loadQuotes(); else if(n==='home') paintNext(); };
+  window.go=function(n){ _go(n); if(!me) return; if(n==='agenda') loadAgenda(); else if(n==='orcamentos') loadQuotes(); else if(n==='home') paintNext(); else if(n==='afiliados') loadAffiliate(); };
 
   /* ---------- eventos ---------- */
   document.addEventListener('click',function(e){
@@ -737,6 +772,32 @@
     if(j.error){ alert('Erro: '+j.error); return; }
     loadAgenda();
   }
+
+  /* ---------- afiliados ---------- */
+  function affLinkFor(code){ const base=location.origin+location.pathname.replace(/index\.html$/,''); return base+'?ref='+code; }
+  async function loadAffiliate(){
+    if(!me) return;
+    const box=el('affList'); box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Carregando…</div>';
+    try{
+      const {j}=await api('get-affiliate',{});
+      el('affBalance').textContent=money(j.balanceCents);
+      el('affReferred').textContent=j.referredCount||0;
+      el('affTotal').textContent=money(j.totalEarnedCents);
+      el('affLink').value=affLinkFor(j.code);
+      const cs=j.commissions||[];
+      box.innerHTML = cs.length ? cs.map(x=>'<div class="card" style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="i" style="width:36px;height:36px;border-radius:10px;background:#e6f7ee;color:#16a34a;display:grid;place-items:center;flex:0 0 36px"><svg style="width:17px;height:17px"><use href="#i-check"/></svg></div><div style="flex:1"><b style="font-size:13.5px">'+x.referredName+'</b><div class="muted" style="font-size:12px">'+(x.role==='pro'?'Profissional indicado':'Cliente indicado')+'</div></div><b style="color:#16a34a">+'+money(x.amountCents)+'</b></div>').join('') : '<div class="card" style="text-align:center;color:var(--ink2)">Ainda sem comissões. Compartilhe seu link!</div>';
+    }catch(e){ box.innerHTML='<div class="card" style="text-align:center;color:var(--ink2)">Erro: '+e.message+'</div>'; }
+  }
+  async function affShareCopy(){ const link=el('affLink').value; try{ await navigator.clipboard.writeText(link); }catch(_){ el('affLink').select(); try{document.execCommand('copy');}catch(__){} } const b=el('affCopy'); const o=b.textContent; b.textContent='Copiado!'; setTimeout(()=>{b.textContent=o;},1400); }
+  function affWhatsShare(){ const msg='Conheça a Chama — profissionais verificados e pagamento em custódia. Entre pelo meu link: '+el('affLink').value; window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); }
+  async function affPixSaque(){ const key=prompt('Sua chave PIX para receber:'); if(!key) return; const {j}=await api('request-affiliate-payout',{method:'pix',pixKey:key}); if(j.error){ alert(j.error); return; } alert('Saque solicitado: '+money(j.withdrawnCents)+' via PIX.'); loadAffiliate(); }
+  async function affCreditar(){ const {j}=await api('request-affiliate-payout',{method:'credit'}); alert(j.message||'Seu saldo fica como crédito.'); }
+  el('affOpen') && el('affOpen').addEventListener('click',()=>go('afiliados'));
+  el('affCopy').addEventListener('click',affShareCopy);
+  el('affWhats').addEventListener('click',affWhatsShare);
+  el('affPix').addEventListener('click',affPixSaque);
+  el('affCredit').addEventListener('click',affCreditar);
+  try{ const rp=new URLSearchParams(location.search).get('ref'); if(rp) localStorage.setItem('chama_ref', rp); }catch(_){}
 
   function enter(){ paintMe(); loadAddresses(); loadAgenda(); _go('home'); }
 
