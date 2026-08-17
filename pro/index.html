@@ -310,7 +310,9 @@
   const BASE='https://rceowmrunmxdwrnurfjv.supabase.co';
   const API=BASE+'/functions/v1/api', REST=BASE+'/rest/v1', AUTHURL=BASE+'/auth/v1';
   const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZW93bXJ1bm14ZHdybnVyZmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjQ3NjIsImV4cCI6MjEwMjA0MDc2Mn0.PPF6BHRCgY4QVuPrqqsbslFQCQNFjrf6-c00otA6rlQ';
-  const money=c=>'R$ '+(Number(c||0)/100).toFixed(2).replace('.',',');
+  let CUR='BRL', LOCALE='pt-BR';
+  const money=c=>{ try{ return new Intl.NumberFormat(LOCALE,{style:'currency',currency:CUR}).format(Number(c||0)/100); }catch(_){ return CUR+' '+(Number(c||0)/100).toFixed(2); } };
+  async function loadConfig(){ if(!me) return; try{ const j=await api('get-config',{}); if(j&&j.currency) CUR=j.currency; if(j&&j.locale) LOCALE=j.locale; }catch(_){} }
   const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const SKEY='chama_pro_session';
   let me=null; try{ me=JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(_){}
@@ -467,7 +469,7 @@
   el('affCredit').addEventListener('click',affCreditar);
   try{ const rp=new URLSearchParams(location.search).get('ref'); if(rp) localStorage.setItem('chama_ref', rp); }catch(_){}
 
-  function enter(){ paintMe(); _go('painel'); loadJobs(); }
+  async function enter(){ await loadConfig(); paintMe(); _go('painel'); loadJobs(); }
   setAuthMode('login');
   if(me){ enter(); } else { showAuth(); }
 </script>
