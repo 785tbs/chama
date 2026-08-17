@@ -181,26 +181,23 @@
     <div class="scroll hasnav">
       <div class="app-top"><div class="ttl">Finanças</div></div>
       <div class="card dark">
-        <span class="eyebrow">Disponível para saque</span><div class="big">R$ 940,00</div>
+        <span class="eyebrow">Disponível para saque</span><div class="big" id="finAvail">R$ 0,00</div>
         <div style="display:flex;gap:9px;margin-top:14px"><button class="btn btn-white btn-sm" style="flex:1" data-toast="Saque via PIX solicitado · cai na hora"><svg style="width:17px;height:17px"><use href="#i-pix"/></svg> Sacar via PIX</button>
           <button class="btn btn-sm" style="flex:1;background:rgba(255,255,255,.12);color:#fff" data-toast="Antecipação simulada"><svg style="width:17px;height:17px"><use href="#i-arrowup"/></svg> Antecipar</button></div>
-        <div class="split"><div class="b"><div class="k">Em custódia (a receber)</div><div class="v">R$ 300,00</div></div><div class="b"><div class="k">Ganhos no mês</div><div class="v">R$ 3.860,00</div></div></div>
+        <div class="split"><div class="b"><div class="k">Em custódia (a receber)</div><div class="v" id="finEscrow">R$ 0,00</div></div><div class="b"><div class="k">Pendente (a repassar)</div><div class="v" id="finPending">R$ 0,00</div></div></div>
       </div>
       <div class="sec"><span class="eyebrow">Ganhos · agosto</span><span class="chip"><svg><use href="#i-trend"/></svg> +18%</span></div>
       <div class="card">
         <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,74,36,.28)"/><stop offset="1" stop-color="rgba(255,74,36,0)"/></linearGradient></defs>
           <path d="M0,58 L60,50 L120,54 L180,36 L240,28 L300,14 L300,70 L0,70 Z" fill="url(#g2)"/><path d="M0,58 L60,50 L120,54 L180,36 L240,28 L300,14" fill="none" stroke="var(--flame)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="300" cy="14" r="4" fill="var(--flame)"/></svg>
-        <div class="kv" style="padding-top:6px"><span class="muted">Recebido (líquido)</span><span class="amt">R$ 3.281,00</span></div>
-        <div class="kv"><span class="muted">Comissão Chama (15%)</span><span class="amt" style="color:var(--ink)">− R$ 579,00</span></div>
+        <div class="kv" style="padding-top:6px"><span class="muted">Recebido (líquido)</span><span class="amt" id="finNet">R$ 0,00</span></div>
+        <div class="kv"><span class="muted">Comissão Chama</span><span class="amt" id="finComm" style="color:var(--ink)">− R$ 0,00</span></div>
       </div>
       <div class="sec"><span class="eyebrow">Precisa agora?</span></div>
-      <div class="advance"><div class="i"><svg><use href="#i-arrowup"/></svg></div><div style="flex:1"><b style="letter-spacing:-.01em">Antecipe R$ 300 em custódia</b><div class="muted" style="font-size:12px">Receba hoje por uma pequena taxa</div></div><button class="btn btn-primary btn-sm" style="width:auto;padding:0 16px" data-toast="Antecipação simulada">Antecipar</button></div>
+      <div class="advance" id="finAdvance" style="display:none"><div class="i"><svg><use href="#i-arrowup"/></svg></div><div style="flex:1"><b style="letter-spacing:-.01em" id="finAdvanceTxt">Antecipe seu valor em custódia</b><div class="muted" style="font-size:12px">Receba hoje por uma pequena taxa</div></div><button class="btn btn-primary btn-sm" style="width:auto;padding:0 16px" data-toast="Antecipação simulada">Antecipar</button></div>
       <div class="sec"><span class="eyebrow">Extrato</span></div>
-      <div class="card" style="padding:4px 16px">
-        <div class="tx"><div class="ti in"><svg><use href="#i-pix"/></svg></div><div class="info"><b>Faxina · Ana B.</b><div>Hoje · líquido</div></div><span class="amt pos">+ R$ 127,50</span></div>
-        <div class="tx"><div class="ti out"><svg><use href="#i-flame"/></svg></div><div class="info"><b>Comissão Chama</b><div>Hoje · 15%</div></div><span class="amt" style="color:var(--ink)">− R$ 22,50</span></div>
-        <div class="tx"><div class="ti out"><svg><use href="#i-arrowup"/></svg></div><div class="info"><b>Saque via PIX</b><div>Ontem</div></div><span class="amt" style="color:var(--ink)">− R$ 500,00</span></div>
-        <div class="tx"><div class="ti out"><svg><use href="#i-store"/></svg></div><div class="info"><b>Loja · Kit limpeza pro</b><div>3× de R$ 63,00</div></div><span class="amt" style="color:var(--ink)">− R$ 63,00</span></div>
+      <div class="card" style="padding:4px 16px" id="finExtrato">
+        <div style="text-align:center;color:var(--ink3);padding:16px 0">Carregando…</div>
       </div>
     </div>
   </section>
@@ -303,7 +300,7 @@
   const withNav=['painel','perfil','financas','loja','chamados'], tabFor={painel:'painel',perfil:'painel',financas:'financas',loja:'loja',chamados:'chamados',orcamento:'chamados',afiliados:'painel'};
   const el=id=>document.getElementById(id);
   function _go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
-  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); else if(n==='perfil') loadReviews(); else if(n==='afiliados') loadAffiliate(); }
+  function go(n){ _go(n); if(!me) return; if(n==='chamados') loadChamados(); else if(n==='painel') loadJobs(); else if(n==='perfil') loadReviews(); else if(n==='afiliados') loadAffiliate(); else if(n==='financas') loadFinance(); }
   let toastT; function toast(m){const e=el('toast');e.textContent=m;e.style.opacity='1';e.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.opacity='0';e.style.transform='translateY(10px)';},1900);}
 
   /* ---- backend real ---- */
@@ -394,6 +391,9 @@
 
   /* ---- agenda do profissional ---- */
   const ST={requested:['Solicitado','#F5A623'],quoted:['Orçado','#F5A623'],accepted:['Aceito','#3B82F6'],scheduled:['Agendado','#3B82F6'],in_progress:['Em andamento','#F5A623'],completed:['Concluído','var(--ok600)'],cancelled:['Cancelado','var(--ink3)']};
+  const PAYLBL={in_escrow:'em custódia',released:'pago',authorized:'autorizado',refunded:'reembolsado',failed:'falhou'};
+  const payText=ps=>PAYLBL[ps]||'aguardando pagamento';
+  const netOf=b=>b.priceCents-(b.commissionCents!=null?b.commissionCents:Math.round(b.priceCents*0.15));
   function fmtDate(iso){if(!iso)return 'A combinar';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
   async function loadJobs(){
     if(!me) return; const box=el('jobList'); if(!box)return;
@@ -402,24 +402,54 @@
       const d=await api('list-bookings',{role:'pro',profileId:PRO});
       const all=d.bookings||[]; window.__jobs=all;
       const active=all.filter(b=>b.status==='scheduled'||b.status==='in_progress'||b.status==='requested'||b.status==='accepted');
-      const completedNet=all.filter(b=>b.status==='completed').reduce((s,b)=>s+Math.round(b.priceCents*0.85),0);
-      const escrow=active.reduce((s,b)=>s+b.priceCents,0);
+      const completedNet=all.filter(b=>b.status==='completed').reduce((s,b)=>s+netOf(b),0);
+      const escrowNet=all.filter(b=>b.paymentStatus==='in_escrow').reduce((s,b)=>s+netOf(b),0);
       if(el('earnWeek'))el('earnWeek').textContent=money(completedNet);
       if(el('earnAvail'))el('earnAvail').textContent=money(completedNet);
-      if(el('earnEscrow'))el('earnEscrow').textContent=money(escrow);
+      if(el('earnEscrow'))el('earnEscrow').textContent=money(escrowNet);
       if(!active.length){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Nenhum serviço agendado.<br><span style="font-size:12px">Monte orçamentos em “Chamados”.</span></div>';return;}
       box.innerHTML=active.map(function(b){
-        const st=ST[b.status]||[b.status,'var(--ink3)']; const net=Math.round(b.priceCents*0.85);
+        const st=ST[b.status]||[b.status,'var(--ink3)']; const net=netOf(b);
+        const paid=b.paymentStatus==='in_escrow'||b.paymentStatus==='released';
+        const payTag=' · <span style="color:'+(paid?'var(--ok600)':'var(--ink3)')+';font-weight:700">'+payText(b.paymentStatus)+'</span>';
         const acts = b.status==='in_progress'
           ? '<button class="btn btn-primary btn-sm" style="flex:1" data-done="'+b.bookingId+'">Concluir serviço</button>'
           : '<button class="btn btn-primary btn-sm" style="flex:1" data-start="'+b.bookingId+'">Iniciar</button><button class="btn btn-ghost btn-sm" style="flex:1" data-cancel="'+b.bookingId+'">Recusar</button>';
-        return '<div class="req"><div class="t"><div class="avatar">'+initials(b.counterpartyName)+'</div><div><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div style="color:var(--ink2);font-size:12.5px;margin-top:2px">'+fmtDate(b.scheduledAt)+' · <span style="color:'+st[1]+';font-weight:700">'+st[0]+'</span></div></div><div class="price"><b>'+money(b.priceCents)+'</b><div>líq. '+money(net)+'</div></div></div><div class="act">'+acts+'</div></div>';
+        return '<div class="req"><div class="t"><div class="avatar">'+initials(b.counterpartyName)+'</div><div><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div style="color:var(--ink2);font-size:12.5px;margin-top:2px">'+fmtDate(b.scheduledAt)+' · <span style="color:'+st[1]+';font-weight:700">'+st[0]+'</span>'+payTag+'</div></div><div class="price"><b>'+money(b.priceCents)+'</b><div>líq. '+money(net)+'</div></div></div><div class="act">'+acts+'</div></div>';
       }).join('');
     }catch(e){box.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">Erro: '+e.message+'</div>';}
   }
   async function startJob(id){const j=await api('update-booking-status',{bookingId:id,status:'in_progress',actorId:PRO});if(j.error){toast('Erro: '+j.error);return;}toast('Serviço iniciado');loadJobs();}
   async function cancelJob(id){const j=await api('update-booking-status',{bookingId:id,status:'cancelled',actorId:PRO});if(j.error){toast('Erro: '+j.error);return;}toast('Serviço recusado');loadJobs();}
   async function completeJob(id){const j=await api('complete-booking',{bookingId:id});if(j.error){toast('Erro: '+j.error);return;}toast('Concluído! Repasse '+money(j.payoutCents));loadJobs();}
+
+  /* ---- finanças reais (repasses + custódia) ---- */
+  async function loadFinance(){
+    if(!me) return;
+    try{
+      const f=await api('list-payouts',{});
+      if(el('finAvail')) el('finAvail').textContent=money(f.paidCents||0);
+      if(el('finEscrow')) el('finEscrow').textContent=money(f.escrowCents||0);
+      if(el('finPending')) el('finPending').textContent=money(f.pendingCents||0);
+      const d=await api('list-bookings',{role:'pro'});
+      const done=(d.bookings||[]).filter(b=>b.status==='completed');
+      const net=done.reduce((s,b)=>s+netOf(b),0);
+      const comm=done.reduce((s,b)=>s+(b.commissionCents||0),0);
+      if(el('finNet')) el('finNet').textContent=money(net);
+      if(el('finComm')) el('finComm').textContent='− '+money(comm);
+      const adv=el('finAdvance');
+      if(adv){ if((f.escrowCents||0)>0){ adv.style.display=''; const t=el('finAdvanceTxt'); if(t) t.textContent='Antecipe '+money(f.escrowCents)+' em custódia'; } else adv.style.display='none'; }
+      const box=el('finExtrato');
+      if(box){
+        const ps=f.payouts||[];
+        box.innerHTML = ps.length ? ps.map(function(p){
+          const isPaid=p.status==='paid';
+          const sub=isPaid?((p.paidAt?fmtDate(p.paidAt):'repasse')+' · líquido'):'repasse pendente';
+          return '<div class="tx"><div class="ti '+(isPaid?'in':'out')+'"><svg><use href="#'+(isPaid?'i-pix':'i-clock')+'"/></svg></div><div class="info"><b>'+p.serviceName+'</b><div>'+sub+'</div></div><span class="amt '+(isPaid?'pos':'')+'"'+(isPaid?'':' style="color:var(--ink3)"')+'>'+(isPaid?'+ ':'')+money(p.amountCents)+'</span></div>';
+        }).join('') : '<div style="text-align:center;color:var(--ink3);padding:16px 0">Sem repasses ainda. Conclua serviços para ver aqui.</div>';
+      }
+    }catch(_){ /* mantém zeros em caso de erro */ }
+  }
 
   /* ---- eventos ---- */
   document.addEventListener('click',e=>{

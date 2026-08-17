@@ -163,8 +163,8 @@
       <div class="card" style="width:100%;margin-top:22px;text-align:left">
         <div style="display:flex;gap:12px;align-items:center"><div class="avatar lg flame" id="confAv">MA</div>
           <div style="flex:1"><b id="confPro">Marcela Almeida</b><div class="muted" style="font-size:12.5px"><span class="stars">★</span> 4,9 · verificada</div></div>
-          <span class="chip ok"><svg><use href="#i-check"/></svg> Pago</span></div>
-        <div class="escrow" style="margin-top:14px"><svg><use href="#i-shield"/></svg><span>Liberamos o pagamento à Marcela só depois de você confirmar a conclusão.</span></div>
+          <span class="chip ok" id="confPayChip"><svg><use href="#i-check"/></svg> Pago</span></div>
+        <div class="escrow" style="margin-top:14px"><svg><use href="#i-shield"/></svg><span id="confEscrowMsg">Liberamos o pagamento à profissional só depois de você confirmar a conclusão.</span></div>
       </div>
       <div style="display:flex;gap:9px;width:100%;margin-top:16px">
         <button class="btn btn-ghost" data-go="home">Início</button>
@@ -539,11 +539,20 @@
     if(!sel.proId){ go('home'); return; }
     const btn=el('confirmBtn'); btn.disabled=true;
     try{
-      const {j}=await api('create-booking',{customerId:me.id,proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId,addressId:sel.addressId});
+      const {j}=await api('create-booking',{proId:sel.proId,serviceId:sel.serviceId,scheduledAt:selectedDate(),priceCents:sel.priceCents,requestId:sel.requestId,addressId:sel.addressId});
       if(j.needsFormalization){ el('sheet').classList.add('open'); return; }
       if(j.error){ alert('Erro ao agendar: '+j.error); return; }
       el('confAv').textContent=initials(sel.name); el('confPro').textContent=sel.name||'Profissional';
-      el('confMsg').innerHTML=(sel.name||'O profissional')+' confirmado — pagamento em custódia (comissão da Chama embutida).';
+      // pagamento em custódia (PSP): o valor sai do cliente e fica retido até a conclusão
+      const pay=await payBooking(j.bookingId);
+      if(pay&&pay.status==='in_escrow'){
+        setPayChip('in_escrow');
+        el('confMsg').innerHTML=(sel.name||'O profissional')+' confirmado — '+money(pay.amountCents)+' pago por '+(pay.method==='pix'?'PIX':pay.method)+' e retido em custódia.';
+        el('confEscrowMsg').textContent='Liberamos o pagamento à '+(sel.name||'profissional')+' só depois de você confirmar a conclusão.';
+      } else {
+        setPayChip(null);
+        el('confMsg').innerHTML=(sel.name||'O profissional')+' agendado. Conclua o pagamento na sua agenda para garantir a vaga.';
+      }
       go('confirm');
     }catch(e){ alert('Erro: '+e.message); } finally { btn.disabled=false; }
   }
@@ -616,12 +625,20 @@
     if(!cur.quoteId||cur.status==='accepted') return;
     const btn=el('acceptQuoteBtn'); btn.disabled=true;
     try{
-      const {j}=await api('accept-quote',{quoteId:cur.quoteId,customerId:me.id,scheduledAt:null});
+      const {j}=await api('accept-quote',{quoteId:cur.quoteId,scheduledAt:null});
       if(j.error){ alert('Erro: '+j.error); btn.disabled=false; return; }
-      alert('Orçamento aceito! O serviço está na sua agenda.');
+      const pay=await payBooking(j.bookingId);
+      if(pay&&pay.status==='in_escrow') alert('Orçamento aceito! '+money(pay.amountCents)+' pago e retido em custódia. O serviço está na sua agenda.');
+      else alert('Orçamento aceito! O serviço está na sua agenda — conclua o pagamento por lá.');
       go('agenda');
     }catch(e){ alert('Erro: '+e.message); btn.disabled=false; }
   }
+
+  /* ---------- pagamento / custódia (PSP) ---------- */
+  const PAYLBL={in_escrow:['Em custódia','gw'],released:['Pago ao profissional','ok'],authorized:['Autorizado','gw'],refunded:['Reembolsado','done'],failed:['Falhou','done']};
+  const payText=ps=>PAYLBL[ps]?PAYLBL[ps][0]:'pagamento pendente';
+  function setPayChip(ps){ const c=el('confPayChip'); if(!c) return; const m=PAYLBL[ps]; c.className='chip '+(m?m[1]:'gw'); c.innerHTML='<svg><use href="#i-shield"/></svg> '+(m?m[0]:'Pagamento pendente'); }
+  async function payBooking(bid){ if(!bid) return null; try{ const {j}=await api('create-payment',{bookingId:bid}); return (j&&!j.error)?j:null; }catch(_){ return null; } }
 
   /* ---------- AGENDA ---------- */
   let agdFilter='upcoming';
@@ -649,12 +666,14 @@
           ? '<div class="kv" style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><span class="muted">Sua avaliação</span><span class="v" style="color:#F5A623;letter-spacing:2px">'+'★'.repeat(b.myRating)+'</span></div>'
           : '<button class="btn btn-ghost btn-sm reviewBtn" data-bid="'+b.bookingId+'" data-pro="'+b.counterpartyName+'" style="width:100%;margin-top:10px">Avaliar profissional</button>';
       } else if(b.status!=='cancelled'){
-        foot='<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-ghost btn-sm reschedBtn" data-bid="'+b.bookingId+'" style="flex:1">Reagendar</button><button class="btn btn-ghost btn-sm cancelBkBtn" data-bid="'+b.bookingId+'" style="flex:1;color:#d33">Cancelar</button></div>';
+        const needsPay = !(b.paymentStatus==='in_escrow'||b.paymentStatus==='released');
+        const payBtn = needsPay ? '<button class="btn btn-primary btn-sm payBkBtn" data-bid="'+b.bookingId+'" style="flex:1"><svg style="width:15px;height:15px"><use href="#i-pix"/></svg> Pagar agora</button>' : '';
+        foot='<div style="display:flex;gap:8px;margin-top:10px">'+payBtn+'<button class="btn btn-ghost btn-sm reschedBtn" data-bid="'+b.bookingId+'" style="flex:1">Reagendar</button><button class="btn btn-ghost btn-sm cancelBkBtn" data-bid="'+b.bookingId+'" style="flex:1;color:#d33">Cancelar</button></div>';
       }
       return '<div class="card" style="margin-bottom:12px">'+
         '<div style="display:flex;align-items:center;justify-content:space-between"><span class="eyebrow">'+fmtDate(b.scheduledAt)+'</span>'+stTag(b.status)+'</div>'+
         '<div class="bk" style="margin-top:8px"><div class="i"><svg><use href="#i-wrench"/></svg></div>'+
-        '<div class="info"><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div>'+money(b.priceCents)+' · em custódia</div></div></div>'+foot+'</div>';
+        '<div class="info"><b>'+b.serviceName+' · '+b.counterpartyName+'</b><div>'+money(b.priceCents)+' · '+payText(b.paymentStatus)+'</div></div></div>'+foot+'</div>';
     }).join('');
   }
   function paintNext(){
@@ -662,8 +681,9 @@
     if(!up.length){ el('upnextSec').style.display='none'; el('upnextCard').style.display='none'; return; }
     const b=up[0];
     el('upnextSec').style.display=''; el('upnextCard').style.display='';
+    const pm=PAYLBL[b.paymentStatus];
     el('upnextCard').innerHTML='<div class="eyebrow">'+fmtDate(b.scheduledAt)+'</div><div class="when">'+b.serviceName+'</div><div class="who">'+b.counterpartyName+'</div>'+
-      '<div style="margin-top:12px;display:flex;gap:8px"><span class="chip gw"><svg><use href="#i-shield"/></svg> Em custódia</span><span class="chip gw">'+stLabel(b.status)+'</span></div>';
+      '<div style="margin-top:12px;display:flex;gap:8px"><span class="chip '+(pm?pm[1]:'gw')+'"><svg><use href="#i-shield"/></svg> '+(pm?pm[0]:'Pagamento pendente')+'</span><span class="chip gw">'+stLabel(b.status)+'</span></div>';
   }
 
   /* ---------- navegação com carga de dados ---------- */
@@ -687,6 +707,7 @@
     const rok=e.target.closest('#reviewOk'); if(rok){ submitReviewUI(); return; }
     const rsb=e.target.closest('.reschedBtn'); if(rsb){ openResched(rsb.dataset.bid); return; }
     const cbk=e.target.closest('.cancelBkBtn'); if(cbk){ doCancelBk(cbk.dataset.bid); return; }
+    const pbk=e.target.closest('.payBkBtn'); if(pbk){ doPayBk(pbk.dataset.bid, pbk); return; }
     const rsok=e.target.closest('#reschedOk'); if(rsok){ doResched(); return; }
     const ba=e.target.closest('#bookAddr'); if(ba){ openAddrSheet(); return; }
     const am=e.target.closest('#addrManageBtn'); if(am){ openAddrSheet(); return; }
@@ -772,6 +793,13 @@
     if(!confirm('Cancelar este agendamento?')) return;
     const {j}=await api('cancel-booking',{ bookingId:bid });
     if(j.error){ alert('Erro: '+j.error); return; }
+    loadAgenda();
+  }
+  async function doPayBk(bid, btn){
+    if(btn){ btn.disabled=true; btn.textContent='Processando…'; }
+    const pay=await payBooking(bid);
+    if(pay&&pay.status==='in_escrow'){ alert('Pagamento de '+money(pay.amountCents)+' feito e retido em custódia. Liberamos à profissional após a conclusão.'); }
+    else { alert('Não foi possível processar o pagamento agora. Tente novamente.'); if(btn){ btn.disabled=false; btn.textContent='Pagar agora'; } }
     loadAgenda();
   }
 
