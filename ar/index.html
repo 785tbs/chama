@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="theme-color" content="#FF4A24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chama">
+<title>Chama · Segurança</title>
+<link rel="stylesheet" href="../app.css">
+<style>
+  .sw{width:46px;height:28px;border-radius:999px;background:#cfd6e0;position:relative;flex:0 0 46px;transition:.18s;cursor:pointer}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .sw.on{background:var(--ok)}.sw.on::after{left:21px}
+  .consent{display:flex;gap:13px;align-items:flex-start}
+  .consent .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:0 0 44px}
+  .consent .ic.safe{background:var(--oktint);color:var(--ok600)}.consent .ic.ai{background:#EEF2FF;color:#3355D6}
+  .consent .ic svg{width:22px;height:22px}
+  .li{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);padding:4px 0}
+  .li svg{width:15px;height:15px;color:var(--ok);flex:0 0 15px;margin-top:2px}
+  .lawnote{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:14px}
+  .cam{flex:1;position:relative;background:radial-gradient(120% 120% at 40% 25%,#2b3340,#0c0f14);display:flex;flex-direction:column}
+  .cam .top{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 16px 0}
+  .rec{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);color:#fff;font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px}
+  .rec .rd{width:9px;height:9px;border-radius:50%;background:#FF3B30}
+  @media (prefers-reduced-motion:no-preference){.rec .rd{animation:pulse 1.4s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,48,.6)}100%{box-shadow:0 0 0 9px rgba(255,59,48,0)}}}
+  .zone{margin:12px 16px 0;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:center}.zone svg{width:16px;height:16px;flex:0 0 16px}
+  .camframe{flex:1;display:grid;place-items:center;color:rgba(255,255,255,.5)}.camframe svg{width:64px;height:64px}
+  .cammeta{padding:0 16px;color:#fff;margin-bottom:12px}.cammeta b{font-weight:800}.cammeta div{font-size:12px;color:#C7CDD8}
+  .camctrls{padding:14px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(12,15,20,0),rgba(12,15,20,.9))}
+  .cbtn{flex:1;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.cbtn svg{width:18px;height:18px}
+  .sos{height:56px;border-radius:16px;border:0;background:#E5341C;color:#fff;font-family:inherit;font-weight:800;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 10px 24px -8px rgba(229,52,28,.7)}.sos svg{width:20px;height:20px}
+  .soswrap{flex:1;background:linear-gradient(180deg,#7a140a,#4a0d06);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px}
+  .soswrap .halo{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;margin-bottom:18px}.soswrap .halo svg{width:52px;height:52px;color:#fff}
+  .soswrap h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}.soswrap p{color:#F3C9C2;margin:8px 0 0;font-size:14px}
+  .sosline{width:100%;margin-top:14px;background:rgba(255,255,255,.1);border-radius:14px;padding:12px;font-size:13px;text-align:left;display:flex;gap:10px;align-items:center}.sosline svg{width:18px;height:18px;flex:0 0 18px}
+  .sess{display:flex;gap:12px;align-items:center;padding:12px 0}.sess+.sess{border-top:1px solid var(--line2)}
+  .sess .si{width:38px;height:38px;border-radius:11px;background:var(--tint);color:var(--flame600);display:grid;place-items:center;flex:0 0 38px}.sess .si svg{width:18px;height:18px}
+  .sess .info{flex:1}.sess .info b{font-size:13.5px}.sess .info div{font-size:11.5px;color:var(--ink3)}
+  .cd{font-size:11px;font-weight:800;color:var(--ink2);background:var(--line2);padding:4px 8px;border-radius:999px}
+  .balance{background:linear-gradient(180deg,#15181E,#0E1116);color:#fff;border-radius:20px;padding:18px}
+  .balance .big{font-size:32px;font-weight:800;letter-spacing:-.03em;margin-top:4px}.balance .big small{font-size:15px;font-weight:700;color:#9AA3B2}
+  .prod2{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface)}
+  .prod2 .row{display:flex;align-items:center;justify-content:space-between}.prod2 b{letter-spacing:-.01em}.prod2 .price{font-weight:800;font-variant-numeric:tabular-nums}
+  .prod2.locked{opacity:.72}
+  .tx{display:flex;align-items:center;gap:12px;padding:11px 0}.tx+.tx{border-top:1px solid var(--line2)}
+  .tx .ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 36px}.tx .ti svg{width:17px;height:17px}
+  .tx .ti.in{background:var(--oktint);color:var(--ok600)}.tx .ti.out{background:var(--line2);color:var(--ink2)}
+  .tx .info{flex:1}.tx .info b{font-size:13.5px}.tx .info div{font-size:11.5px;color:var(--ink3)}
+  .amt{font-weight:800;font-variant-numeric:tabular-nums}.amt.pos{color:var(--ok600)}
+  .screen.dark-screen{background:#0c0f14}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .3-1.9.8-2.7C7 9.9 6 11 6 13a6 6 0 1 0 12 0c0-4.5-3-7.5-6-11Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 6.2A9.7 9.7 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.3 3.9M6.2 6.7A17 17 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 3.6-.7"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 9 6 15 15 15l1-3-4-2-2 2c-2-1-4-3-5-5l2-2-2-4z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h9"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="10" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 12v3M21 12v3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3 9 8m6 3-9 9m0 0-3-3m3 3 3-1c0-3 1-5 4-6l3-3-2-2-3 3c-2 3-4 4-6 4l-1 3"/></symbol>
+  <symbol id="i-pix" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6 15.1 5 12 7.4 8.9 5 12 2.6ZM5 8.9 7.4 12 5 15.1 2.6 12 5 8.9Zm14 0L21.4 12 19 15.1 16.6 12 19 8.9ZM12 16.6 15.1 19 12 21.4 8.9 19 12 16.6Z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></symbol>
+</defs></svg>
+
+<div id="app">
+
+  <!-- CONSENT -->
+  <section class="screen active" data-screen="consent">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Gravação do serviço<small>Faxina · hoje 09:00</small></div></div>
+      <h1 class="h1">Como quer usar a gravação?</h1>
+      <p class="muted" style="font-size:13px;margin-top:6px">São duas escolhas independentes. Recusar a segunda não afeta o serviço nem a primeira.</p>
+      <div class="card" style="margin-top:14px">
+        <div class="consent"><div class="ic safe"><svg><use href="#i-shield"/></svg></div>
+          <div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between"><b style="letter-spacing:-.01em">Segurança</b><span class="sw on" data-sw></span></div>
+            <div class="muted" style="font-size:12.5px;margin-top:2px">Protege você e o profissional. <b>Necessária</b>.</div></div></div>
+        <div style="margin-top:10px">
+          <div class="li"><svg><use href="#i-lock"/></svg> Vídeo <b>criptografado</b> — ninguém assiste, exceto em incidente ou SOS</div>
+          <div class="li"><svg><use href="#i-clock"/></svg> Apagado automaticamente em <b>7 dias</b></div>
+          <div class="li"><svg><use href="#i-eyeoff"/></svg> Sem reconhecimento facial · pausa em quarto/banheiro</div></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="consent"><div class="ic ai"><svg><use href="#i-ai"/></svg></div>
+          <div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between"><b style="letter-spacing:-.01em">Ajudar a treinar a IA</b><span class="sw" data-sw></span></div>
+            <div class="muted" style="font-size:12.5px;margin-top:2px"><b>Opcional</b> · pode desligar quando quiser</div></div></div>
+        <div style="margin-top:10px">
+          <div class="li"><svg><use href="#i-eyeoff"/></svg> Rostos <b>borrados</b> antes de qualquer uso</div>
+          <div class="li"><svg><use href="#i-check"/></svg> Nunca usamos imagens de crianças</div>
+          <div class="li"><svg><use href="#i-check"/></svg> Sem pagamento por imagem/biometria · você pode revogar</div></div>
+      </div>
+      <p class="lawnote">Bases legais distintas (LGPD): segurança por legítimo interesse e proteção à vida; treino de IA por consentimento específico.</p>
+      <button class="btn btn-primary" style="margin-top:14px" data-go="live">Começar serviço com segurança</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" data-go="live">Só segurança, sem treino de IA</button>
+      <a class="listrow" href="../" style="margin-top:12px"><div class="i" style="background:var(--line2);color:var(--ink)"><svg><use href="#i-home"/></svg></div><div class="t"><b>Voltar ao app do cliente</b></div><span class="chev"><svg><use href="#i-chev"/></svg></span></a>
+    </div>
+  </section>
+
+  <!-- LIVE -->
+  <section class="screen dark-screen" data-screen="live">
+    <div class="cam">
+      <div class="top"><span class="rec"><span class="rd"></span> AO VIVO · 12:34</span><span class="chip gw"><svg><use href="#i-lock"/></svg> Criptografado</span></div>
+      <div class="zone"><svg><use href="#i-eyeoff"/></svg> Zonas privadas (quarto/banheiro) pausam a câmera automaticamente</div>
+      <div class="camframe"><svg><use href="#i-eye"/></svg></div>
+      <div class="cammeta"><b>POV · Marcela A.</b><div>Faxina · Rua dos Pinheiros, 480</div></div>
+      <div class="camctrls">
+        <div style="display:flex;gap:10px"><button class="cbtn" data-go="consent"><svg><use href="#i-pause"/></svg> Pausar</button><button class="cbtn" data-go="dados"><svg><use href="#i-eyeoff"/></svg> Encerrar</button></div>
+        <button class="sos" data-go="sos"><svg><use href="#i-alert"/></svg> SOS · pedir ajuda agora</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOS -->
+  <section class="screen dark-screen" data-screen="sos">
+    <div class="soswrap">
+      <div class="halo"><svg><use href="#i-alert"/></svg></div>
+      <h2>Ajuda a caminho</h2>
+      <p>A central de segurança foi acionada e está<br>acompanhando ao vivo agora.</p>
+      <div class="sosline"><svg><use href="#i-eye"/></svg> Transmissão liberada à central só durante o SOS</div>
+      <div class="sosline"><svg><use href="#i-phone"/></svg> Ligando para você e para o contato de emergência</div>
+      <div class="sosline"><svg><use href="#i-shield"/></svg> Localização e vídeo preservados como prova</div>
+      <button class="btn" style="background:#fff;color:#E5341C;margin-top:20px" data-go="live">Estou bem · cancelar</button>
+    </div>
+  </section>
+
+  <!-- MEUS DADOS -->
+  <section class="screen" data-screen="dados">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Meus dados</div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between"><div><b style="letter-spacing:-.01em">Treino de IA</b><div class="muted" style="font-size:12px">Ajudar a treinar a IA com minhas gravações</div></div><span class="sw" data-sw></span></div>
+        <div class="muted" style="font-size:11.5px;margin-top:10px">Desligado. Suas gravações são usadas só para segurança.</div>
+      </div>
+      <div class="sec"><span class="eyebrow">Gravações (apagam sozinhas)</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="sess"><div class="si"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Faxina · hoje</b><div>Criptografada · só sob incidente</div></div><span class="cd">apaga em 7d</span></div>
+        <div class="sess"><div class="si"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Faxina · 05/08</b><div>Sem incidentes</div></div><span class="cd">apaga em 2d</span></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Quem acessou</span></div>
+      <div class="card"><div class="muted" style="font-size:13px">Nenhum acesso registrado. Ninguém assistiu suas gravações.</div></div>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" data-toast="Exportando seus dados…"><svg style="width:17px;height:17px"><use href="#i-list"/></svg> Baixar meus dados</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:#E5341C" data-toast="Solicitação de exclusão registrada"><svg style="width:17px;height:17px"><use href="#i-trash"/></svg> Excluir tudo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COTAS -->
+  <section class="screen" data-screen="cotas">
+    <div class="scroll hasnav">
+      <div class="app-top"><div class="ttl">Cotas de robô<small>Programa de créditos</small></div></div>
+      <div class="balance">
+        <span class="eyebrow" style="color:#9AA3B2">Seu saldo</span><div class="big">18,0 <small>horas de serviço</small></div>
+        <div style="display:flex;gap:8px;margin-top:12px"><span class="chip gw"><svg><use href="#i-robot"/></svg> 2 cotas</span><span class="chip gw"><svg><use href="#i-clock"/></svg> rende crédito ao trabalhar</span></div>
+      </div>
+      <div class="sec"><span class="eyebrow">Comprar cota</span></div>
+      <div class="prod2"><div class="row"><b>Cota 10 horas</b><span class="price">R$ 499</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Crédito p/ usar em qualquer serviço. Sem resgate em dinheiro.</div><button class="btn btn-primary btn-sm" style="margin-top:12px" data-toast="Cota 10h — pagamento PIX simulado"><svg style="width:17px;height:17px"><use href="#i-pix"/></svg> Comprar com PIX</button></div>
+      <div class="prod2"><div class="row"><b>Cota 30 horas</b><span class="price">R$ 1.390</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Melhor valor por hora. Válida por 24 meses.</div><button class="btn btn-ghost btn-sm" style="margin-top:12px" data-toast="Cota 30h — pagamento simulado">Comprar</button></div>
+      <div class="prod2 locked"><div class="row"><b>Renda em dinheiro</b><span class="chip"><svg><use href="#i-lock"/></svg> Em breve</span></div><div class="muted" style="font-size:12.5px;margin-top:3px">Cota que paga rendimento — disponível só quando estruturada pelo caminho regulado (CVM).</div></div>
+      <div class="sec"><span class="eyebrow">Extrato de créditos</span></div>
+      <div class="card" style="padding:4px 16px">
+        <div class="tx"><div class="ti in"><svg><use href="#i-wallet"/></svg></div><div class="info"><b>Compra · Cota 10h</b><div>Hoje</div></div><span class="amt pos">+10,0 h</span></div>
+        <div class="tx"><div class="ti in"><svg><use href="#i-robot"/></svg></div><div class="info"><b>Crédito gerado</b><div>Robô trabalhou p/ você</div></div><span class="amt pos">+2,0 h</span></div>
+        <div class="tx"><div class="ti out"><svg><use href="#i-broom"/></svg></div><div class="info"><b>Usado · Faxina</b><div>05/08</div></div><span class="amt" style="color:var(--ink)">−4,0 h</span></div>
+      </div>
+      <p class="lawnote">Programa de créditos de serviço — <b>não é previdência nem investimento</b>. A cota dá direito a horas, não a rendimento em dinheiro.</p>
+    </div>
+  </section>
+
+  <nav class="tabbar" id="nav">
+    <button data-go="consent" data-tab="consent"><svg><use href="#i-shield"/></svg>Consent.</button>
+    <button data-go="live" data-tab="live"><svg><use href="#i-video"/></svg>Ao vivo</button>
+    <button data-go="dados" data-tab="dados"><svg><use href="#i-lock"/></svg>Dados</button>
+    <button data-go="cotas" data-tab="cotas"><svg><use href="#i-robot"/></svg>Cotas</button>
+  </nav>
+
+  <div id="toast" style="position:absolute;left:16px;right:16px;bottom:84px;background:#0E1116;color:#fff;padding:13px 16px;border-radius:14px;font-size:13.5px;font-weight:600;text-align:center;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:30"></div>
+</div>
+
+<script>
+  const screens=[...document.querySelectorAll('.screen')], nav=document.getElementById('nav'), navBtns=[...nav.querySelectorAll('button')];
+  const withNav=['consent','live','dados','cotas'], tabFor={consent:'consent',live:'live',sos:'live',dados:'dados',cotas:'cotas'};
+  function go(n){const s=screens.find(x=>x.dataset.screen===n);if(!s)return;screens.forEach(x=>x.classList.toggle('active',x===s));nav.classList.toggle('hidden',!withNav.includes(n));const t=tabFor[n];navBtns.forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=s.querySelector('.scroll');if(sc)sc.scrollTop=0;}
+  let toastT; function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';el.style.transform='translateY(0)';clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(10px)';},1900);}
+  document.addEventListener('click',e=>{
+    const sw=e.target.closest('[data-sw]'); if(sw){sw.classList.toggle('on');toast(sw.classList.contains('on')?'Ativado':'Desativado');return;}
+    const g=e.target.closest('[data-go]'); if(g){e.preventDefault();go(g.dataset.go);return;}
+    const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);return;}
+  });
+</script>
+</body>
+</html>
